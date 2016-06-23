@@ -25,7 +25,7 @@ pomp(
     Csnippet("
       DL = b * A * exp(-cel * L - cea * A);
       DP = L * (1 - ul);
-      DA = P * exp(-cpa * A) + A * (1 - ua);")),
+      DA = P * exp(-cpa * A) + A * (1 - ua);"),delta.t=2),
   initializer=Csnippet("
       L = L_0;
       P = P_0;
@@ -46,8 +46,8 @@ ggplot(data=join(as.data.frame(deterministic_model),x,by='time'),
   geom_line(aes(y=Pupae),color='black')+
   geom_line(aes(y=P),color='red')
 
-ggplot(data=join(as.data.frame(deterministic_model),x,by='time'),
+print(ggplot(data=join(as.data.frame(deterministic_model),x,by='time'),
        mapping=aes(x=time))+
   geom_line(aes(y=Adults),color='black')+
   geom_line(aes(y=A),color='red')
-
+)
