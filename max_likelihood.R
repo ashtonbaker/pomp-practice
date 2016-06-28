@@ -21,6 +21,19 @@ defaultparams <- c(b = 10.45,
                    sigma_2 = 0.7375,
                    sigma_3 = 0.01212)
 
+mle_params <- c(b = 11.1,
+                cea = 0.013,
+                cel = 0.014,
+                cpa = 0.004,
+                ua = 0.003,
+                ul = 0.312,
+                L_0 = 250,
+                P_0 = 5,
+                A_0 = 100,
+                sigma_1 = 1.325,
+                sigma_2 = 0.770,
+                sigma_3 = 0.107)
+
 pomp(
   data=dat,
   times="weeks", t0=-1,
@@ -82,14 +95,33 @@ xx <- simulate(model,params=defaultparams)
 dprocess(xx,x=states(xx),params=coef(xx),times=time(xx),log=TRUE)
 ## log likelihood of the full set of state-transitions:
 
-f1 <- function(sigma_3) {
-  p <- defaultparams
-  p['sigma_3'] <- sigma_3
-  sum(dprocess(model,x=x,params=p,times=time(model),log=TRUE))
+#f1 <- function(sigma_3) {
+#  p <- defaultparams
+#  p['sigma_3'] <- sigma_3
+#  sum(dprocess(model,x=x,params=p,times=time(model),log=TRUE))
+#}
+
+#sigma_3 <- seq(from=0, to=2, by=0.001)
+#LIK <- sapply(sigma_3, f1)
+#sigma_3.hat <- sigma_3[which.max(LIK)]
+#plot(sigma_3, LIK, type='l')
+#abline(v=sigma_3.hat, lty=2)
+
+f2 <- function(par) {
+  p <- c(b = par[1],
+         cea = par[2],
+         cel = par[3],
+         cpa = par[4],
+         ua = par[5],
+         ul = par[6],
+         L_0 = 250,
+         P_0 = 5,
+         A_0 = 100,
+         sigma_1 = par[7],
+         sigma_2 = par[8],
+         sigma_3 = par[9])
+  -sum(dprocess(model,x=x,params=p,times=time(model),log=TRUE))
 }
 
-sigma_3 <- seq(from=0, to=2, by=0.001)
-LIK <- sapply(sigma_3, f1)
-sigma_3.hat <- sigma_3[which.max(LIK)]
-plot(sigma_3, LIK, type='l')
-abline(v=sigma_3.hat, lty=2)
+optim(fn=f2, par=c(b.hat, cea.hat, cel.hat, cpa.hat, ua.hat,ul.hat,sigma_1.hat,sigma_2.hat,sigma_3.hat)mle) -> fit2
+fit2

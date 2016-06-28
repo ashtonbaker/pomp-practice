@@ -7,7 +7,9 @@ library(reshape2)
 stopifnot(packageVersion("pomp")>="1.4.9")
 
 # Import and organize the data for the model
-read.csv("./data.csv") %>% subset(weeks <= 40, select=c(weeks,rep,L_obs,P_obs,A_obs)) %>%
+read.csv("./data.csv") %>%subset(weeks <= 40, select=c(weeks,rep,L_obs,P_obs,A_obs)) -> dat
+
+dat %>%
   melt(id=c("weeks","rep")) %>%
   acast(variable~rep~weeks) -> datarray
 
@@ -20,9 +22,8 @@ row.names(paramarray) <- c("b", "cea", "cel", "cpa", "ua", "ul", "L_0", "P_0", "
 colnames(paramarray) <- 1:24
 
 pomp(
-  data = datarray,
-  params=paramarray[,1],
-  times=seq(0,40,by=2), t0=0,
+  data = subset(dat, rep==1),
+  times="weeks", t0=0,
   initializer=Csnippet("
                        L = L_0;
                        P = P_0;
@@ -50,7 +51,7 @@ pomp(
                     lik = 1;
                     }"),
   dprocess=onestep.dens(dens.fun=function(x1,x2,t1,t2,params,...){
-    #stopifnot(t2==t1+2L)
+    stopifnot(t2==t1+2L)
     with(as.list(params),{
       mu_l <- sqrt(b * x1["A"] * exp(-cel*x1["L"] - cea*x1["A"]))
       mu_p <- sqrt(x1["L"] * (1 - ul))
@@ -70,3 +71,20 @@ pomp(
     delta.t=2),
   statenames = c("L", "P", "A"),
   paramnames = c("b", "cea", "cel", "cpa", "ua", "ul", "L_0", "P_0", "A_0", "sigma_1", "sigma_2", "sigma_3")) -> model
+
+f2 <- function(par) {
+  p <- paramarray
+  p[c('b', 'cea','cel','ua','ul','sigma_1','sigma_2','sigma_3'),] <-
+      c(par['b'],
+         par['cea'],
+         par['cel'],
+         par['ua'],
+         par['ul'],
+         par['sigma_1'],
+         par['sigma_2'],
+         par['sigma_3'])
+  sum(dprocess(model,x=statearray,params=p,times=time(model),log=TRUE))
+}
+
+optim(fn=f2, control=c(fnscale=-1), par=mle_params) -> fit2
+fit2
