@@ -18,16 +18,35 @@ rownames(statearray) <- c("L","P","A")
 
 # Import and organize the parameters for the model
 paramarray <- as.matrix(read.csv('./params.csv'))
-row.names(paramarray) <- c("b", "cea", "cel", "cpa", "ua", "ul", "L_0", "P_0", "A_0", "sigma_1", "sigma_2", "sigma_3")
+row.names(paramarray) <- c("b", "cea", "cel", "cpa", "ua", "ul", "sigma_1", "sigma_2", "sigma_3")
 colnames(paramarray) <- 1:24
 
+params1 <- c(b = 10.45,
+                   cea = 0.01310,
+                   cel = 0.01731,
+                   cpa = 0.004619,
+                   ua = 0.007629,
+                   ul = 0.2000,
+                   sigma_1 = 1.621,
+                   sigma_2 = 0.7375,
+                   sigma_3 = 0.01212)
+
+params2 <- c(b = 2,
+                   cea = 0.5,
+                   cel = 0.5,
+                   cpa = 0.5,
+                   ua = 0.5,
+                   ul = 0.5,
+                   sigma_1 = 1,
+                   sigma_2 = 1,
+                   sigma_3 = 1)
 pomp(
-  data = subset(dat, rep==1),
+  data = subset(dat, rep==2),
   times="weeks", t0=0,
   initializer=Csnippet("
-                       L = L_0;
-                       P = P_0;
-                       A = A_0;"),
+                       L = 250;
+                       P = 5;
+                       A = 100;"),
   rprocess=discrete.time.sim(
     step.fun=Csnippet('
                       double e1 = rnorm(0,sigma_1);
@@ -60,6 +79,7 @@ pomp(
       likl <- dnorm(sqrt(x2["L"]), mean = mu_l, sd = sigma_1,log=TRUE)
       likp <- dnorm(sqrt(x2["P"]), mean = mu_p, sd = sigma_2,log=TRUE)
       lika <- dnorm(sqrt(x2["A"]), mean = mu_a, sd = sigma_3,log=TRUE)
+      if(ua < 0){lika = -Inf}
       likl + likp + lika
     })
     }),
@@ -70,21 +90,22 @@ pomp(
              DA = P * exp(-cpa * A) + A * (1 - ua);"),
     delta.t=2),
   statenames = c("L", "P", "A"),
-  paramnames = c("b", "cea", "cel", "cpa", "ua", "ul", "L_0", "P_0", "A_0", "sigma_1", "sigma_2", "sigma_3")) -> model
+  paramnames = c("b", "cea", "cel", "cpa", "ua", "ul", "sigma_1", "sigma_2", "sigma_3")) -> model
 
 f2 <- function(par) {
   p <- paramarray
-  p[c('b', 'cea','cel','ua','ul','sigma_1','sigma_2','sigma_3'),] <-
+  p[c('b', 'cea','cel','ul','sigma_1','sigma_2','sigma_3'),] <-
       c(par['b'],
          par['cea'],
          par['cel'],
-         par['ua'],
          par['ul'],
          par['sigma_1'],
          par['sigma_2'],
          par['sigma_3'])
+  p['ua',c(4, 11, 24)] <- par['ua']
+  p['cpa',c(4, 11, 24)] <- par['cpa']
   sum(dprocess(model,x=statearray,params=p,times=time(model),log=TRUE))
 }
 
-optim(fn=f2, control=c(fnscale=-1), par=mle_params) -> fit2
-fit2
+optim(fn=f2, control=c(fnscale=-1, maxit=10000), par=params1[c('b', 'cea','cel', 'cpa','ua','ul','sigma_1','sigma_2','sigma_3')]) -> fit2
+print(fit2)
