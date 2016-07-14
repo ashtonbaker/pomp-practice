@@ -7,7 +7,9 @@ library(reshape2)
 stopifnot(packageVersion("pomp")>="1.4.9")
 
 # Import and organize the data for the model
-read.csv("./data.csv") %>%subset(weeks <= 40, select=c(weeks,rep,E_obs,L_obs,P_obs,A_obs)) -> dat
+read.csv("./data.csv") %>%subset(weeks <= 40, select=c(weeks,rep,L_obs,P_obs,A_obs)) -> dat
+dat$E_obs <- 0
+
 
 dat %>%
   melt(id=c("weeks","rep")) %>%
@@ -89,6 +91,7 @@ pomp(
                         L[k] -= (ltrans[2*k]+ltrans[2*k+1]);
                         L[k+1] += ltrans[2*k]; // L[lstages] == P[0]!!
                       }
+
                       for (k = 0; k < pstages; k++) {
                         P[k] -= (ptrans[2*k]+ptrans[2*k+1]);
                         P[k+1] += ptrans[2*k]; // P[pstages] == A[0]!!
@@ -110,5 +113,34 @@ pomp(
                     L_obs = L_tot;
                     P_obs = P_tot;
                     A_obs = A;"),
-  params = c("b"=0.7464286, "cea"=0.01310, "cel"=0.01731, "cpa"=0.004619, "mu_A"=0.007629,"mu_L"=0.015812,"gamma_L"=0.984188,"sigma_1"=1.621, "sigma_2"=0.7375, "sigma_3"=0.01212)) -> model
+  params = c("b"=0.7464286,
+             "cea"=0.01310,
+             "cel"=0.01731,
+             "cpa"=0.004619,
+             "mu_A"=0.007629,
+             "mu_L"=0.015812,
+             "gamma_L"=0.984188,
+             "sigma_1"=1.621,
+             "sigma_2"=0.7375,
+             "sigma_3"=0.01212)) -> model
 
+defaultparams <- c("b"=0.7464286, "cea"=0.01310, "cel"=0.01731, "cpa"=0.004619, "mu_A"=0.007629, "mu_L"=0.015812, "gamma_L"=0.984188, "sigma_1"=1.621, "sigma_2"=0.7375, "sigma_3"=0.01212)
+
+ssr <- function(par) {
+  sim <- simulate(model, nsim = 200, params = par)
+  total <- 0
+  for(i in 1:200){
+    for(j in c(4, 11, 24)){
+      total = total + sum(rowSums((datarray[c("L_obs", "P_obs", "A_obs"),j,] - obs(sim[[i]])[c('L_obs','P_obs','A_obs'),])^2)^0.5)
+    }
+  }
+  total
+}
+
+f1 <- function(b_hat) {
+  p <- defaultparams
+  p['b'] <- b_hat
+  ssr(p)
+}
+
+fit1 <- optim(fn=ssr, par=defaultparams)
