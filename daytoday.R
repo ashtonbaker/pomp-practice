@@ -23,10 +23,11 @@ pomp(
   paramnames = c("b", "cea", "cel", "cpa", "mu_A", "mu_L", "gamma_L", "sigma_1", "sigma_2", "sigma_3"),
   globals = "int estages = 14, lstages = 14, pstages = 14, astages = 1, L_0 = 250, P_0 = 5, A_0 = 100;",
   initializer=Csnippet("
+                      #define LSTAGE 14
                       double *E = &E1;
                       double *L = &L1;
                       double *P = &P1;
-                      double L_rate[100], P_rate[100] = {0};
+                      double L_rate[LSTAGE], P_rate[100] = {0};
 
                       int k;
                       double L_tot = 0;
@@ -127,8 +128,13 @@ pomp(
 defaultparams <- c("b"=0.7464286, "cea"=0.01310, "cel"=0.01731, "cpa"=0.004619, "mu_A"=0.007629, "mu_L"=0.015812, "gamma_L"=0.984188, "sigma_1"=1.621, "sigma_2"=0.7375, "sigma_3"=0.01212)
 
 ssr <- function(par) {
-  sim <- simulate(model, nsim = 200, params = par)
   total <- 0
+  if(sum(defaultparams < 0) != 0){
+    total <- -Inf
+  }
+  
+  sim <- simulate(model, nsim = 200, params = par)
+
   for(i in 1:200){
     for(j in c(4, 11, 24)){
       total = total + sum(rowSums((datarray[c("L_obs", "P_obs", "A_obs"),j,] - obs(sim[[i]])[c('L_obs','P_obs','A_obs'),])^2)^0.5)
