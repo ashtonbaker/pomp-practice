@@ -1,0 +1,7 @@
+total 2.6M
+-rw-rw-r-- 1 ashtonsb ashtonsb 2.5M Aug 26 11:53 box_search_local.rda
+-rw-rw-r-- 1 ashtonsb ashtonsb 2.3K Aug 26 12:00 lik_local.rda
+-rw-rw-r-- 1 ashtonsb ashtonsb    0 Aug 26 12:00 message.txt
+-rw-rw-r-- 1 ashtonsb ashtonsb 4.6K Aug 26 12:00 model_params.csv
+-rw-rw-r-- 1 ashtonsb ashtonsb 1.3K Aug 26 12:00 output.Rout
+-rw-rw-r-- 1 ashtonsb ashtonsb  39K Aug 26 11:50 pf.rda

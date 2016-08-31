@@ -1,0 +1,40 @@
+
+R version 3.2.4 Revised (2016-03-16 r70336) -- "Very Secure Dishes"
+Copyright (C) 2016 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(ggplot2)
+> library(plyr)
+> library(reshape2)
+> library(pomp)
+> library(magrittr)
+> library(reshape2)
+> library(foreach)
+> options(echo = FALSE)
+Warning message:
+1 filtering failure occurred in ‘pfilter’ 
+[1] -322.1248
+Loading required package: iterators
+Loading required package: parallel
+[1] "Starting initial pfilter"
+[1] "Finished initial pfilter"
+                       se 
+-316.3444494    0.4928501 
+[1] "Starting local box search"
+[1] "Finished local box search"
+[1] "Starting lik_local"
+[1] "Finished lik_local"

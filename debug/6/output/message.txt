@@ -1,0 +1,3 @@
+total 4.0K
+-rw-rw-r-- 1 ashtonsb ashtonsb    0 Aug 29 12:38 message.txt
+-rw-rw-r-- 1 ashtonsb ashtonsb 1.7K Aug 29 12:38 output.Rout

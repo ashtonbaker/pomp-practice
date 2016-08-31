@@ -1,0 +1,16 @@
+total 28K
+-rw-rw-r-- 1 ashtonsb ashtonsb 9.8K Aug 26 11:12 abridg.R
+-rw-rw-r-- 1 ashtonsb ashtonsb  116 Aug 26 11:12 crunch.sh
+drwxrwxr-x 2 ashtonsb ashtonsb 4.0K Aug 23 10:58 data
+-rw-rw-r-- 1 ashtonsb ashtonsb  568 Aug 26 11:12 finished.py
+drwxrwxr-x 2 ashtonsb ashtonsb 4.0K Aug 26 11:13 output
+total 8.0K
+-rw-rw-r-- 1 ashtonsb ashtonsb 298 Aug 26 11:13 message.txt
+-rw-rw-r-- 1 ashtonsb ashtonsb  68 Aug 26 11:15 output.Rout
+total 2.6M
+-rw-rw-r-- 1 ashtonsb ashtonsb 2.5M Aug 26 11:19 box_search_local.rda
+-rw-rw-r-- 1 ashtonsb ashtonsb 2.3K Aug 26 11:26 lik_local.rda
+-rw-rw-r-- 1 ashtonsb ashtonsb  429 Aug 26 11:15 message.txt
+-rw-rw-r-- 1 ashtonsb ashtonsb 4.6K Aug 26 11:26 model_params.csv
+-rw-rw-r-- 1 ashtonsb ashtonsb 1.2K Aug 26 11:26 output.Rout
+-rw-rw-r-- 1 ashtonsb ashtonsb  39K Aug 26 11:16 pf.rda
