@@ -82,21 +82,18 @@ glob_snippet <- Csnippet(sprintf("
 #
 #     A = 100;")
 
-    init_snippet <-
-      Csnippet("
-        double *E = &E1;
-        double *L = &L1;
-        double *P = &P1;
-
-        int k = 0;
-
-        for(k = 0; k < 7; k++) E[k] = 0;
-        for(k = 0; k < 5; k++) L[k] = 36;
-        for(k = 5; k < 7; k++) L[k] = 35;
-        for(k = 0; k < 5; k++) P[k] = 1;
-        for(k = 5; k < 7; k++) P[k] = 0;
-
-        A = 100;")
+init_snippet <-
+  Csnippet("
+    double *E = &E1;
+    double *L = &L1;
+    double *P = &P1;
+    int k = 0;
+    for(k = 0; k < 7; k++) E[k] = 0;
+    for(k = 0; k < 5; k++) L[k] = 36;
+    for(k = 5; k < 7; k++) L[k] = 35;
+    for(k = 0; k < 5; k++) P[k] = 1;
+    for(k = 5; k < 7; k++) P[k] = 0;
+    A = 100;")
 
 rproc_snippet <-
   Csnippet("
@@ -116,25 +113,25 @@ rproc_snippet <-
     double mu_l = (LSTAGES / tau_L) * mu_L;
     double mu_p = (PSTAGES / tau_P) * (1 - exp((-cpa * A) / ESTAGES));
 
-    int etrans[2*ESTAGES], ltrans[2*LSTAGES], ptrans[2*PSTAGES], adeath;
+    double etrans[2*ESTAGES], ltrans[2*LSTAGES], ptrans[2*PSTAGES], adeath;
 
     // Calculate who goes where
     for (k = 0; k < ESTAGES; k++) {
-      etrans[2*k]   = rbinom((int) E[k],gamma_E);                             // Eggs growing to next stage
-      etrans[2*k+1] = rbinom((int) (E[k] - etrans[2*k]), mu_e/(1 - gamma_E)); // Eggs dying
+      etrans[2*k]   = rbinom(E[k], gamma_E);                             // Eggs growing to next stage
+      etrans[2*k+1] = rbinom( E[k] - etrans[2*k] , mu_e/(1 - gamma_E) ); // Eggs dying
     }
 
     for (k = 0; k < LSTAGES; k++) {
-      ltrans[2*k]   = rbinom((int) L[k], gamma_L);                          // Larvae growing to next stage
-      ltrans[2*k+1] = rbinom((int) (L[k]-ltrans[2*k]), mu_l/(1 - gamma_L)); // Larvae dying
+      ltrans[2*k]   = rbinom( L[k], gamma_L);                          // Larvae growing to next stage
+      ltrans[2*k+1] = rbinom( L[k]-ltrans[2*k], mu_l/(1 - gamma_L));   // Larvae dying
     }
 
     for (k = 0; k < PSTAGES; k++) {
-      ptrans[2*k]   = rbinom((int) P[k], gamma_P);                           // Pupae growing to next stage
-      ptrans[2*k+1] = rbinom((int) (P[k]-ptrans[2*k]), mu_p/(1 - gamma_P) ); // Pupae dying
+      ptrans[2*k]   = rbinom(P[k], gamma_P);                           // Pupae growing to next stage
+      ptrans[2*k+1] = rbinom( P[k]-ptrans[2*k], mu_p/(1 - gamma_P) ); // Pupae dying
     }
 
-    adeath = rbinom((int) A, mu_A);
+    adeath = rbinom(A, mu_A);
 
     // Bookkeeping
     for (k = 0; k < ESTAGES; k++) {
@@ -169,43 +166,21 @@ dmeas_snippet <-Csnippet(
   for (k = 0; k < PSTAGES; k++) P_tot += P[k];
 
   lik = 0;
-  if (L_obs > 0) {
-    lik += log(pnorm(L_obs + 0.5, L_tot, meas_sd, 1, 0) - pnorm(L_obs - 0.5, L_tot, meas_sd, 1, 0));
-  } else {
-    lik += pnorm(0.5,L_tot,meas_sd,1,1);
-  }
+  lik += dpois(L_obs, L_tot, 1) +
+         dpois(P_obs, P_tot, 1) +
+         dpois(A_obs, A,     1);
 
-  if (P_obs > 0) {
-    lik += log(pnorm(P_obs + 0.5, P_tot, meas_sd, 1, 0) - pnorm(P_obs - 0.5, P_tot, meas_sd, 1, 0));
-  } else {
-    lik += pnorm(0.5,P_tot,meas_sd,1,1);
+  if(lik == 0){
+    printf(\"\\n\\nweeks %f\", t);
+    printf(\"\\nL_tot %f\", L_tot);
+    printf(\"\\nP_tot %f\", P_tot);
+    printf(\"\\nA_tot %f\", A);
+    printf(\"\\nL_obs %f\", L_obs);
+    printf(\"\\nP_obs %f\", P_obs);
+    printf(\"\\nA_obs %f\", A_obs);
   }
-
-  if (A_obs > 0) {
-    lik += log(pnorm(A_obs + 0.5, A, meas_sd, 1, 0) - pnorm(A_obs - 0.5, A, meas_sd, 1, 0));
-  } else {
-    lik += pnorm(0.5,A,meas_sd,1,1);
-  }
-
-  //if(isnan(lik))
-  //{
-  //  printf(\"\\n\\nweeks %f\", t);
-  //  printf(\"\\nL_tot %f\", L_tot);
-  //  printf(\"\\nP_tot %f\", P_tot);
-  //  printf(\"\\nA_tot %f\", A);
-  //  printf(\"\\nsd    %f\", meas_sd);
-  //  printf(\"\\nb     %f\", b);
-  //  printf(\"\\ncea   %f\", cea);
-  //  printf(\"\\ncpa   %f\", cpa);
-  //  printf(\"\\nmu_A  %f\", mu_A);
-  //  printf(\"\\nmu_L  %f\", mu_L);
-  //  printf(\"\\ntau_E %f\", tau_E);
-  //  printf(\"\\ntau_L %f\", tau_L);
-  //  printf(\"\\ntau_P %f\", tau_P);
-  //}
 
   lik = (give_log) ? lik : exp(lik);
-
    ")
 
 rmeas_snippet <-
@@ -215,21 +190,14 @@ rmeas_snippet <-
     const double *P = &P1;
 
     int k;
-    double E_tot = 0;
     double L_tot = 0;
     double P_tot = 0;
-    for (k = 0; k < ESTAGES; k++) E_tot += E[k];
     for (k = 0; k < LSTAGES; k++) L_tot += L[k];
     for (k = 0; k < PSTAGES; k++) P_tot += P[k];
 
-    E_obs = E_tot;
-    L_obs = nearbyint(rnorm(L_tot, meas_sd));
-    P_obs = nearbyint(rnorm(P_tot, meas_sd));
-    A_obs = nearbyint(rnorm(A, meas_sd));
-
-    L_obs = (L_obs > 0) ? L_obs : 0;
-    P_obs = (P_obs > 0) ? P_obs : 0;
-    A_obs = (A_obs > 0) ? A_obs : 0;")
+    L_obs = rpois(L_tot);
+    P_obs = rpois(P_tot);
+    A_obs = rpois(A);")
 
 from_est <-
   Csnippet("
@@ -241,8 +209,7 @@ from_est <-
     Tmu_L = expit(mu_L);
     Ttau_E = exp(tau_E);
     Ttau_L = exp(tau_L);
-    Ttau_P = exp(tau_P);
-    Tmeas_sd = exp(meas_sd);")
+    Ttau_P = exp(tau_P);")
 
 to_est <-
   Csnippet("
@@ -254,16 +221,14 @@ to_est <-
     Tmu_L = logit(mu_L);
     Ttau_E = log(tau_E);
     Ttau_L = log(tau_L);
-    Ttau_P = log(tau_P);
-    Tmeas_sd = log(meas_sd);
-    ")
+    Ttau_P = log(tau_P);")
 
 pomp(
   data = subset(dat, rep==4),
   times="weeks", t0=0,
   obsnames = c("E_obs", "L_obs", "P_obs", "A_obs"),
   statenames = c(sprintf("E%d",1:stages.E),sprintf("L%d",1:stages.L),sprintf("P%d",1:stages.P),"A"),
-  paramnames = c("b", "cea", "cel", "cpa", "mu_A", "mu_L", "tau_E", "tau_L", "tau_P", "meas_sd"),
+  paramnames = c("b", "cea", "cel", "cpa", "mu_A", "mu_L", "tau_E", "tau_L", "tau_P"),
   globals = glob_snippet,
   initializer = init_snippet,
   rprocess = discrete.time.sim(
@@ -281,8 +246,8 @@ pomp(
              "mu_L"=0.0158937470126093,
              "tau_E"=15.7219226675806,
              "tau_L"=7.18906255435284,
-             "tau_P"=18.0248791283609,
-             "meas_sd" = 10)) -> model
+             "tau_P"=18.0248791283609
+             )) -> model
 
 defaultparams <- model@params
 pf <- pfilter(model, params = defaultparams, Np=1000)
@@ -332,7 +297,7 @@ stew(file="./output/box_search_local.rda",{
         cooling.fraction.50=0.5,
         transform=TRUE,
         rw.sd=rw.sd(b=0.02, cea=0.02, cel=0.02, cpa=0.02, mu_A=0.02, mu_L=0.02,
-                    tau_E=0.02, tau_L=0.02, tau_P=0.02, meas_sd = 0.02)
+                    tau_E=0.02, tau_L=0.02, tau_P=0.02)
       )
     }
   })
@@ -373,8 +338,7 @@ params_box <- rbind(
   tau_E = c(7, 14),
   tau_L = c(7, 14),
   tau_P = c(7, 14),
-  tau_A = c(7, 14),
-  meas_sd = c(0, 3)
+  tau_A = c(7, 14)
 )
 
 print("Starting global search")

@@ -1,0 +1,11 @@
+total 4.0K
+-rw-rw-r-- 1 ashtonsb ashtonsb    0 Sep  1 15:13 message.txt
+-rw-rw-r-- 1 ashtonsb ashtonsb 1.6K Sep  1 15:13 output.Rout
+total 3.1M
+-rw-rw-r-- 1 ashtonsb ashtonsb 192K Sep  1 17:33 box_search_global.rda
+-rw-rw-r-- 1 ashtonsb ashtonsb 2.9M Sep  1 15:15 box_search_local.rda
+-rw-rw-r-- 1 ashtonsb ashtonsb 1.8K Sep  1 15:20 lik_local.rda
+-rw-rw-r-- 1 ashtonsb ashtonsb  133 Sep  1 15:13 message.txt
+-rw-rw-r-- 1 ashtonsb ashtonsb  51K Sep  1 17:33 model_params.csv
+-rw-rw-r-- 1 ashtonsb ashtonsb 1.2K Sep  1 17:33 output.Rout
+-rw-rw-r-- 1 ashtonsb ashtonsb  20K Sep  1 15:14 pf.rda
