@@ -6,7 +6,7 @@ library(magrittr)
 library(reshape2)
 library(foreach)
 #options(echo = FALSE)
-stopifnot(packageVersion("pomp")>="1.8.9.1")
+stopifnot(packageVersion("pomp")>="1.8.8.1")
 
 read.csv("./data/data.csv") %>%
   subset(weeks <= 40, select=c(weeks,rep,L_obs,P_obs,A_obs)) -> dat
@@ -118,16 +118,16 @@ dmeas_snippet <-Csnippet(
         dnbinom_mu(P_obs, 1/od, P_tot+fudge, 1) +
         dnbinom_mu(A_obs, 1/od, A+fudge,     1);
 
-  if(lik < -138){
-    Rprintf(\"\\n\\nweeks %f\", t);
-    Rprintf(\"\\nL_tot %f\", L_tot);
-    Rprintf(\"\\nP_tot %f\", P_tot);
-    Rprintf(\"\\nA_tot %f\", A);
-    Rprintf(\"\\nL_obs %f\", L_obs);
-    Rprintf(\"\\nP_obs %f\", P_obs);
-    Rprintf(\"\\nA_obs %f\", A_obs);
-    Rprintf(\"\\nloglik %f\",lik);
-  }
+//  if(lik < -138){
+//    Rprintf(\"\\n\\nweeks %f\", t);
+//    Rprintf(\"\\nL_tot %f\", L_tot);
+//    Rprintf(\"\\nP_tot %f\", P_tot);
+//    Rprintf(\"\\nA_tot %f\", A);
+//    Rprintf(\"\\nL_obs %f\", L_obs);
+//    Rprintf(\"\\nP_obs %f\", P_obs);
+//    Rprintf(\"\\nA_obs %f\", A_obs);
+//    Rprintf(\"\\nloglik %f\",lik);
+//  }
 
   lik = (give_log) ? lik : exp(lik);
    ")
@@ -180,7 +180,7 @@ pomp(
   statenames = c(sprintf("E%d",1:stages.E),
                  sprintf("L%d",1:stages.L),
                  sprintf("P%d",1:stages.P),"A"),
-  paramnames = c("b", "cea", "cel", "cpa", "mu_A", "mu_L", 
+  paramnames = c("b", "cea", "cel", "cpa", "mu_A", "mu_L",
                  "tau_E", "tau_L", "tau_P","od"),
   globals = glob_snippet,
   initializer = init_snippet,
@@ -255,7 +255,7 @@ stew(file="./output/box_search_local.rda",{
         cooling.type="geometric",
         cooling.fraction.50=0.5,
         transform=TRUE,
-        rw.sd=rw.sd(b=0.02, cea=0.02, cel=0.02, cpa=0.02, 
+        rw.sd=rw.sd(b=0.02, cea=0.02, cel=0.02, cpa=0.02,
                     mu_A=0.02, mu_L=0.02, od=0.02,
                     tau_E=0.02, tau_L=0.02, tau_P=0.02)
       )
@@ -298,7 +298,6 @@ params_box <- rbind(
   tau_E = c(7, 14),
   tau_L = c(7, 14),
   tau_P = c(7, 14),
-  tau_A = c(7, 14),
   od = c(1,1)
 )
 
@@ -311,10 +310,10 @@ stew(file="./output/box_search_global.rda",{
     guesses <- as.data.frame(apply(params_box,1,function(x)runif(30,x[1],x[2])))
     results_global <- foreach(guess=iter(guesses,"row"),
                               .packages='pomp',
-                              # .combine=rbind,
+                              .combine=rbind,
                               .options.multicore=list(set.seed=TRUE),
                               .export=c("mf1")
-    ) %dopar% 
+    ) %dopar%
     {
       mf <- mif2(mf1,start=c(unlist(guess)),tol=1e-60)
       mf <- mif2(mf,Nmif=100)
