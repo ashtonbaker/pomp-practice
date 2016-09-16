@@ -19,6 +19,19 @@ stages.L <- 7
 stages.P <- 7
 stages.A <- 1
 
+params_box <- rbind(
+  b=c(0, 20),
+  cea=c(0, 1),
+  cel = c(0, 1),
+  cpa = c(0, 1),
+  mu_A = c(0, 1),
+  mu_L = c(0, 1),
+  tau_E = c(7, 14),
+  tau_L = c(7, 14),
+  tau_P = c(7, 14),
+  od = c(0,1)
+)
+
 glob_snippet <- Csnippet(sprintf("
                                  #include <math.h>
                                  #define ESTAGES %d
@@ -202,134 +215,149 @@ pomp(
              tau_P=18.0248791283609,
              od = 1
              )) -> model
+while(TRUE){
+  system("rm ./output/*.rda ./output/model_params.csv")
+  p <- c(unlist(as.data.frame(apply(params_box,1,function(x)runif(30,x[1],x[2])))[1,]))
+  model <- pomp(model, params = p)
+  dat2 <- subset(simulate(model, as.data.frame=TRUE),select=c(time, L_obs, P_obs, A_obs))
 
-model %>% simulate(as.data.frame=T,nsim=5) %>%
-  melt(id=c("time","sim")) %>%
-  subset(variable %in% c("L_obs","P_obs","A_obs")) %>%
-  ggplot(aes(x=time,y=value,color=variable,group=sim))+
-    geom_line()+
-    facet_wrap(~variable,ncol=1,scales="free_y")
+  pomp(
+    data = dat2,
+    times="time", t0=0,
+    statenames = c(sprintf("E%d",1:stages.E),
+                   sprintf("L%d",1:stages.L),
+                   sprintf("P%d",1:stages.P),"A"),
+    paramnames = c("b", "cea", "cel", "cpa", "mu_A", "mu_L",
+                   "tau_E", "tau_L", "tau_P","od"),
+    globals = glob_snippet,
+    initializer = init_snippet,
+    rprocess = discrete.time.sim(
+      step.fun = rproc_snippet,
+      delta.t = 1/7),
+    dmeasure = dmeas_snippet,
+    rmeasure = rmeas_snippet,
+    toEstimationScale = to_est,
+    fromEstimationScale = from_est,
+    params = c(unlist(as.data.frame(apply(params_box,1,function(x)runif(30,x[1],x[2])))[1,]))) -> model
 
-pf <- pfilter(model, Np=1000)
-logLik(pf)
+  model %>% simulate(as.data.frame=T,nsim=5) %>%
+    melt(id=c("time","sim")) %>%
+    subset(variable %in% c("L_obs","P_obs","A_obs")) %>%
+    ggplot(aes(x=time,y=value,color=variable,group=sim))+
+      geom_line()+
+      facet_wrap(~variable,ncol=1,scales="free_y")
 
-library(foreach)
-library(doParallel)
-registerDoParallel(cores=30)
+  pf <- pfilter(model, Np=1000)
+  logLik(pf)
 
-print("Starting initial pfilter")
+  library(foreach)
+  library(doParallel)
+  registerDoParallel(cores=30)
 
-stew(file="./output/pf.rda",{
-  t_pf <- system.time(
-    pf <- foreach(i=1:10,.packages='pomp',
-                  .options.multicore=list(set.seed=TRUE),
-                  .export=c("model")
-    ) %dopar% {
-      pfilter(model,Np=10000)
-    }
-  )
-  n_pf <- getDoParWorkers()
-},seed=625904618,kind="L'Ecuyer")
+  print("Starting initial pfilter")
 
-print("Finished initial pfilter")
+  stew(file="./output/pf.rda",{
+    t_pf <- system.time(
+      pf <- foreach(i=1:10,.packages='pomp',
+                    .options.multicore=list(set.seed=TRUE),
+                    .export=c("model")
+      ) %dopar% {
+        pfilter(model,Np=10000)
+      }
+    )
+    n_pf <- getDoParWorkers()
+  },seed=625904618,kind="L'Ecuyer")
 
-(L_pf <- logmeanexp(sapply(pf,logLik),se=TRUE))
-results <- as.data.frame(as.list(c(coef(pf[[1]]),loglik=L_pf[1],loglik=L_pf[2])))
-write.csv(results,file="./output/model_params.csv",row.names=FALSE)
+  print("Finished initial pfilter")
 
-print("Starting local box search")
+  (L_pf <- logmeanexp(sapply(pf,logLik),se=TRUE))
+  results <- as.data.frame(as.list(c(coef(pf[[1]]),loglik=L_pf[1],loglik=L_pf[2])))
+  write.csv(results,file="./output/model_params.csv",row.names=FALSE)
 
-stew(file="./output/box_search_local.rda",{
-  t_local_mif <- system.time({
-    mifs_local <- foreach(i=1:20,
-                          .packages='pomp',
-                          .combine=c,
-                          .options.multicore=list(set.seed=TRUE),
-                          .export=c("model")
-    ) %dopar%
-    {
-      mif2(
-        model,
-        Np=2000,
-        Nmif=50,
-        cooling.type="geometric",
-        cooling.fraction.50=0.5,
-        transform=TRUE,
-        rw.sd=rw.sd(b=0.02, cea=0.02, cel=0.02, cpa=0.02,
-                    mu_A=0.02, mu_L=0.02, od=0.02,
-                    tau_E=0.02, tau_L=0.02, tau_P=0.02)
-      )
-    }
-  })
-},seed=482947940,kind="L'Ecuyer")
+  print("Starting local box search")
 
-print("Finished local box search")
+  stew(file="./output/box_search_local.rda",{
+    t_local_mif <- system.time({
+      mifs_local <- foreach(i=1:20,
+                            .packages='pomp',
+                            .combine=c,
+                            .options.multicore=list(set.seed=TRUE),
+                            .export=c("model")
+      ) %dopar%
+      {
+        mif2(
+          model,
+          Np=2000,
+          Nmif=50,
+          cooling.type="geometric",
+          cooling.fraction.50=0.5,
+          transform=TRUE,
+          rw.sd=rw.sd(b=0.02, cea=0.02, cel=0.02, cpa=0.02,
+                      mu_A=0.02, mu_L=0.02, od=0.02,
+                      tau_E=0.02, tau_L=0.02, tau_P=0.02)
+        )
+      }
+    })
+  },seed=482947940,kind="L'Ecuyer")
 
-print("Starting lik_local")
+  print("Finished local box search")
 
-stew(file="./output/lik_local.rda",{
-  t_local_eval <- system.time({
-    results_local <- foreach(mf=mifs_local,
-                             .packages='pomp',
-                             .combine=rbind,
-                             .options.multicore=list(set.seed=TRUE)
-    ) %dopar%
-    {
-      evals <- replicate(10, logLik(pfilter(mf,Np=20000)))
-      ll <- logmeanexp(evals,se=TRUE)
-      c(coef(mf),loglik=ll[1],loglik=ll[2])
-    }
-  })
-},seed=900242057,kind="L'Ecuyer")
+  print("Starting lik_local")
 
-print("Finished lik_local")
+  stew(file="./output/lik_local.rda",{
+    t_local_eval <- system.time({
+      results_local <- foreach(mf=mifs_local,
+                               .packages='pomp',
+                               .combine=rbind,
+                               .options.multicore=list(set.seed=TRUE)
+      ) %dopar%
+      {
+        evals <- replicate(10, logLik(pfilter(mf,Np=20000)))
+        ll <- logmeanexp(evals,se=TRUE)
+        c(coef(mf),loglik=ll[1],loglik=ll[2])
+      }
+    })
+  },seed=900242057,kind="L'Ecuyer")
 
-results_local <- as.data.frame(results_local)
-results <- rbind(results,results_local[names(results)])
-write.csv(results,file="./output/model_params.csv",row.names=FALSE)
+  print("Finished lik_local")
 
-params_box <- rbind(
-  b=c(0, 20),
-  cea=c(0, 1),
-  cel = c(0, 1),
-  cpa = c(0, 1),
-  mu_A = c(0, 1),
-  mu_L = c(0, 1),
-  tau_E = c(7, 14),
-  tau_L = c(7, 14),
-  tau_P = c(7, 14),
-  od = c(1,1)
-)
+  results_local <- as.data.frame(results_local)
+  results <- rbind(results,results_local[names(results)])
+  write.csv(results,file="./output/model_params.csv",row.names=FALSE)
 
-print("Starting global search")
+  print("Starting global search")
 
-stew(file="./output/box_search_global.rda",{
-  n_global <- getDoParWorkers()
-  t_global <- system.time({
-    mf1 <- mifs_local[[1]]
-    guesses <- as.data.frame(apply(params_box,1,function(x)runif(30,x[1],x[2])))
-    results_global <- foreach(guess=iter(guesses,"row"),
-                              .packages='pomp',
-                              .combine=rbind,
-                              .options.multicore=list(set.seed=TRUE),
-                              .export=c("mf1")
-    ) %dopar%
-    {
-      mf <- mif2(mf1,start=c(unlist(guess)),tol=1e-60)
-      mf <- mif2(mf,Nmif=100)
-      ll <- replicate(10,logLik(pfilter(mf,Np=100000)))
-      ll <- logmeanexp(ll,se=TRUE)
-      c(coef(mf),loglik=ll[1],loglik=ll[2])
-    }
-  })
-},seed=1270401374,kind="L'Ecuyer")
-results_global <- as.data.frame(results_global)
-results <- rbind(results,results_global[names(results)])
-write.csv(results,file="./output/model_params.csv",row.names=FALSE)
+  stew(file="./output/box_search_global.rda",{
+    n_global <- getDoParWorkers()
+    t_global <- system.time({
+      mf1 <- mifs_local[[1]]
+      guesses <- as.data.frame(apply(params_box,1,function(x)runif(30,x[1],x[2])))
+      results_global <- foreach(guess=iter(guesses,"row"),
+                                .packages='pomp',
+                                .combine=rbind,
+                                .options.multicore=list(set.seed=TRUE),
+                                .export=c("mf1")
+      ) %dopar%
+      {
+        mf <- mif2(mf1,start=c(unlist(guess)),tol=1e-60)
+        mf <- mif2(mf,Nmif=100)
+        ll <- replicate(10,logLik(pfilter(mf,Np=100000)))
+        ll <- logmeanexp(ll,se=TRUE)
+        c(coef(mf),loglik=ll[1],loglik=ll[2])
+      }
+    })
+  },seed=1270401374,kind="L'Ecuyer")
+  results_global <- as.data.frame(results_global)
+  results <- rbind(results,results_global[names(results)])
+  write.csv(results,file="./output/model_params.csv",row.names=FALSE)
 
-print("Finished global search")
+  print("Finished global search")
 
-sink("message.txt", append=FALSE, split=FALSE)
-proc.time()
-sink()
-q(runLast = FALSE)
+  p_optim <- unlist(results_global[which.max(results_global$loglik),])
+  write.table(t(c(p, p_optim)), file = "./output/target_vs_recovered.csv", append = TRUE, col.names=FALSE, row.names = FALSE, sep=", ")
+
+  sink("message.txt", append=FALSE, split=FALSE)
+  proc.time()
+  sink()
+  q(runLast = FALSE)
+}

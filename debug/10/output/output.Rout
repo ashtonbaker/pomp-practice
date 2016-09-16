@@ -40,6 +40,19 @@ Type 'q()' to quit R.
 > stages.P <- 7
 > stages.A <- 1
 > 
+> params_box <- rbind(
++   b=c(0, 20),
++   cea=c(0, 1),
++   cel = c(0, 1),
++   cpa = c(0, 1),
++   mu_A = c(0, 1),
++   mu_L = c(0, 1),
++   tau_E = c(7, 14),
++   tau_L = c(7, 14),
++   tau_P = c(7, 14),
++   od = c(0,1)
++ )
+> 
 > glob_snippet <- Csnippet(sprintf("
 +                                  #include <math.h>
 +                                  #define ESTAGES %d
@@ -224,6 +237,29 @@ Type 'q()' to quit R.
 +              od = 1
 +              )) -> model
 > 
+> p <- c(unlist(as.data.frame(apply(params_box,1,function(x)runif(30,x[1],x[2])))[1,]))
+> model <- pomp(model, params = p)
+> dat2 <- subset(simulate(model, as.data.frame=TRUE),select=c(time, L_obs, P_obs, A_obs))
+> 
+> pomp(
++   data = dat2,
++   times="time", t0=0,
++   statenames = c(sprintf("E%d",1:stages.E),
++                  sprintf("L%d",1:stages.L),
++                  sprintf("P%d",1:stages.P),"A"),
++   paramnames = c("b", "cea", "cel", "cpa", "mu_A", "mu_L",
++                  "tau_E", "tau_L", "tau_P","od"),
++   globals = glob_snippet,
++   initializer = init_snippet,
++   rprocess = discrete.time.sim(
++     step.fun = rproc_snippet,
++     delta.t = 1/7),
++   dmeasure = dmeas_snippet,
++   rmeasure = rmeas_snippet,
++   toEstimationScale = to_est,
++   fromEstimationScale = from_est,
++   params = p) -> model
+> 
 > model %>% simulate(as.data.frame=T,nsim=5) %>%
 +   melt(id=c("time","sim")) %>%
 +   subset(variable %in% c("L_obs","P_obs","A_obs")) %>%
@@ -233,7 +269,7 @@ Type 'q()' to quit R.
 > 
 > pf <- pfilter(model, Np=1000)
 > logLik(pf)
-[1] -337.581
+[1] -25.86746
 > 
 > library(foreach)
 > library(doParallel)
@@ -260,8 +296,8 @@ Loading required package: parallel
 [1] "Finished initial pfilter"
 > 
 > (L_pf <- logmeanexp(sapply(pf,logLik),se=TRUE))
-                         se 
--3.375884e+02  4.401507e-03 
+                       se 
+-25.87918386   0.01202083 
 > results <- as.data.frame(as.list(c(coef(pf[[1]]),loglik=L_pf[1],loglik=L_pf[2])))
 > write.csv(results,file="./output/model_params.csv",row.names=FALSE)
 > 
@@ -320,19 +356,6 @@ Loading required package: parallel
 > results <- rbind(results,results_local[names(results)])
 > write.csv(results,file="./output/model_params.csv",row.names=FALSE)
 > 
-> params_box <- rbind(
-+   b=c(0, 20),
-+   cea=c(0, 1),
-+   cel = c(0, 1),
-+   cpa = c(0, 1),
-+   mu_A = c(0, 1),
-+   mu_L = c(0, 1),
-+   tau_E = c(7, 14),
-+   tau_L = c(7, 14),
-+   tau_P = c(7, 14),
-+   od = c(1,1)
-+ )
-> 
 > print("Starting global search")
 [1] "Starting global search"
 > 
@@ -362,6 +385,9 @@ Loading required package: parallel
 > 
 > print("Finished global search")
 [1] "Finished global search"
+> 
+> p_optim <- unlist(results_global[which.max(results_global$loglik),])
+> write.table(t(c(p, p)), file = "./output/target_vs_recovered.csv", append = TRUE, col.names=FALSE, row.names = FALSE, sep=", ")
 > 
 > sink("message.txt", append=FALSE, split=FALSE)
 > proc.time()
