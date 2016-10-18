@@ -1,0 +1,24 @@
+total 2.6M
+-rw-rw-r-- 1 ashtonsb ashtonsb 129K Sep  2 15:42 box_search_global.rda
+-rw-rw-r-- 1 ashtonsb ashtonsb 2.5M Sep  2 15:26 box_search_local.rda
+-rw-rw-r-- 1 ashtonsb ashtonsb 2.3K Sep  2 15:32 lik_local.rda
+-rw-rw-r-- 1 ashtonsb ashtonsb    0 Sep  2 15:42 message.txt
+-rw-rw-r-- 1 ashtonsb ashtonsb 4.7K Sep  2 15:32 model_params.csv
+-rw-rw-r-- 1 ashtonsb ashtonsb  11K Sep  2 15:42 output.Rout
+-rw-rw-r-- 1 ashtonsb ashtonsb  24K Sep  2 15:24 pf.rda
+total 2.7M
+-rw-rw-r-- 1 ashtonsb ashtonsb 128K Sep  2 16:22 box_search_global.rda
+-rw-rw-r-- 1 ashtonsb ashtonsb 2.5M Sep  2 15:26 box_search_local.rda
+-rw-rw-r-- 1 ashtonsb ashtonsb 2.3K Sep  2 15:32 lik_local.rda
+-rw-rw-r-- 1 ashtonsb ashtonsb  459 Sep  2 15:42 message.txt
+-rw-rw-r-- 1 ashtonsb ashtonsb  11K Sep  2 16:22 model_params.csv
+-rw-rw-r-- 1 ashtonsb ashtonsb  11K Sep  2 16:22 output.Rout
+-rw-rw-r-- 1 ashtonsb ashtonsb  24K Sep  2 15:24 pf.rda
+total 2.7M
+-rw-rw-r-- 1 ashtonsb ashtonsb 128K Sep  6 14:06 box_search_global.rda
+-rw-rw-r-- 1 ashtonsb ashtonsb 2.5M Sep  2 15:26 box_search_local.rda
+-rw-rw-r-- 1 ashtonsb ashtonsb 2.3K Sep  2 15:32 lik_local.rda
+-rw-rw-r-- 1 ashtonsb ashtonsb  918 Sep  2 16:22 message.txt
+-rw-rw-r-- 1 ashtonsb ashtonsb  11K Sep  6 14:06 model_params.csv
+-rw-rw-r-- 1 ashtonsb ashtonsb  12K Sep  6 14:06 output.Rout
+-rw-rw-r-- 1 ashtonsb ashtonsb  24K Sep  2 15:24 pf.rda
