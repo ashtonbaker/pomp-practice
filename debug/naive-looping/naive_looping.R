@@ -220,7 +220,7 @@ for (i in 1:24) {
 
   print("Starting initial pfilter")
 
-  stew(file="./output/pf.rda",{
+  stew(file=sprintf("./output/pf%d.rda", i),{
     t_pf <- system.time(
       pf <- foreach(i=1:10,.packages='pomp',
                     .options.multicore=list(set.seed=TRUE),
@@ -240,7 +240,7 @@ for (i in 1:24) {
 
   print("Starting local box search")
 
-  stew(file="./output/box_search_local.rda",{
+  stew(file=sprintf("./output/box_search_local%i.rda", i),{
     t_local_mif <- system.time({
       mifs_local <- foreach(i=1:20,
                             .packages='pomp',
@@ -268,7 +268,7 @@ for (i in 1:24) {
 
   print("Starting lik_local")
 
-  stew(file="./output/lik_local.rda",{
+  stew(file=sprintf("./output/lik_local%d.rda", i),{
     t_local_eval <- system.time({
       results_local <- foreach(mf=mifs_local,
                                .packages='pomp',
@@ -304,7 +304,7 @@ for (i in 1:24) {
 
   print("Starting global search")
 
-  stew(file="./output/box_search_global.rda",{
+  stew(file=sprintf("./output/box_search_global%d.rda", i),{
     n_global <- getDoParWorkers()
     t_global <- system.time({
       mf1 <- mifs_local[[1]]
