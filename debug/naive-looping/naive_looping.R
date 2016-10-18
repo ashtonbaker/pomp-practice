@@ -331,5 +331,5 @@ for (i in 1:24) {
   print("Finished global search")
 
   p_optim <- unlist(results_global[which.max(results_global$loglik),])
-  write.table(t(c(p, p_optim)), file = "./output/optim_params.csv", append = TRUE, col.names=FALSE, row.names = FALSE, sep=", ")
+  write.table(p_optim, file = "./output/optim_params.csv", append = TRUE, col.names=FALSE, row.names = FALSE, sep=", ")
 }
