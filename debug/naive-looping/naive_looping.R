@@ -326,10 +326,11 @@ for (i in 1:24) {
   },seed=1270401374,kind="L'Ecuyer")
   results_global <- as.data.frame(results_global)
   results <- rbind(results,results_global[names(results)])
-  write.csv(results,file="./output/model_params.csv",row.names=FALSE)
+  #write.csv(results,file="./output/model_params.csv",row.names=FALSE)
 
   print("Finished global search")
 
   p_optim <- unlist(results_global[which.max(results_global$loglik),])
+  print(p_optim)
   write.table(p_optim, file = "./output/optim_params.csv", append = TRUE, col.names=FALSE, row.names = FALSE, sep=", ")
 }
