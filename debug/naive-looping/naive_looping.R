@@ -332,7 +332,6 @@ for (i in 1:24) {
       results_global <- foreach(guess=iter(guesses,"row"),
                                 .packages='pomp',
                                 .combine=rbind,
-                                .options.multicore=list(set.seed=TRUE),
                                 .export=c("mf1")
       ) %dopar%
       {
@@ -354,3 +353,6 @@ for (i in 1:24) {
   print(p_optim)
   write.table(p_optim, file = "./output/optim_params.csv", append = TRUE, col.names=FALSE, row.names = FALSE, sep=", ")
 }
+
+closeCluster(cl)
+mpi.quit()
