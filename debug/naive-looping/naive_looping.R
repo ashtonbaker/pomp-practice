@@ -6,6 +6,10 @@ library(magrittr)
 library(reshape2)
 library(foreach)
 #options(echo = FALSE)
+require(doMPI)
+cl <- startMPIcluster()
+registerDoMPI(cl)
+
 stopifnot(packageVersion("pomp")>="1.8.8.1")
 
 read.csv("./data/data.csv") %>%
@@ -53,9 +57,10 @@ rproc_snippet <-
     double L_tot = 0;
     for (k = 0; k < LSTAGES; k++) L_tot += L[k];
 
-    double gamma_E = (ESTAGES / tau_E) * exp((-cel * L_tot - cea * A) / ESTAGES);
+    double gamma_E = (ESTAGES / tau_E) *
+                     exp((-cel * L_tot - cea * A) / ESTAGES);
     double gamma_L = (LSTAGES / tau_L) * (1 - mu_L);
-    double gamma_P = (PSTAGES / tau_P) * exp((-cpa * A) / ESTAGES);
+    double gamma_P = (PSTAGES / tau_P) * exp((-cpa * A) / PSTAGES);
 
     double mu_e = (ESTAGES / tau_E) - gamma_E;
     double mu_l = (LSTAGES / tau_L) - gamma_L;
@@ -65,18 +70,27 @@ rproc_snippet <-
 
     // Calculate who goes where
     for (k = 0; k < ESTAGES; k++) {
-      etrans[2*k]   = rbinom(E[k], gamma_E);                             // Eggs growing to next stage
-      etrans[2*k+1] = rbinom(E[k] - etrans[2*k] , mu_e/(1 - gamma_E) ); // Eggs dying
+      // Eggs growing to next stage
+      etrans[2*k]   = rbinom(E[k], gamma_E);
+
+      // Eggs dying
+      etrans[2*k+1] = rbinom(E[k]-etrans[2*k], mu_e/(1 - gamma_E) );
     }
 
     for (k = 0; k < LSTAGES; k++) {
-      ltrans[2*k]   = rbinom(L[k], gamma_L);                          // Larvae growing to next stage
-      ltrans[2*k+1] = rbinom(L[k]-ltrans[2*k], mu_l/(1 - gamma_L));   // Larvae dying
+      // Larvae growing to next stage
+      ltrans[2*k]   = rbinom(L[k], gamma_L);
+
+      // Larvae dying
+      ltrans[2*k+1] = rbinom(L[k]-ltrans[2*k], mu_l/(1 - gamma_L));
     }
 
     for (k = 0; k < PSTAGES; k++) {
-      ptrans[2*k]   = rbinom(P[k], gamma_P);                           // Pupae growing to next stage
-      ptrans[2*k+1] = rbinom(P[k]-ptrans[2*k], mu_p/(1 - gamma_P) ); // Pupae dying
+      // Pupae growing to next stage
+      ptrans[2*k]   = rbinom(P[k], gamma_P);
+
+      // Pupae dying
+      ptrans[2*k+1] = rbinom(P[k]-ptrans[2*k], mu_p/(1 - gamma_P) );
     }
 
     adeath = rbinom(A, mu_A);
@@ -85,17 +99,26 @@ rproc_snippet <-
     E[0] += rpois(b*A); // oviposition
 
     for (k = 0; k < ESTAGES; k++) {
+      // Subtract eggs that die or progress
       E[k] -= (etrans[2*k]+etrans[2*k+1]);
+
+      // Add eggs that arrive from previous E stage.
       E[k+1] += etrans[2*k]; // E[ESTAGES] == L[0]!!
     }
 
     for (k = 0; k < LSTAGES; k++) {
+      // Subtract larvae that die or progress
       L[k] -= (ltrans[2*k]+ltrans[2*k+1]);
+
+      // Add larvae that arrive from previous E stage.
       L[k+1] += ltrans[2*k]; // L[LSTAGES] == P[0]!!
     }
 
     for (k = 0; k < PSTAGES; k++) {
+      // Subtract pupae that die or progress
       P[k] -= (ptrans[2*k]+ptrans[2*k+1]);
+
+      // Add pupae that arrive from previous E stage.
       P[k+1] += ptrans[2*k]; // P[PSTAGES] == A[0]!!
     }
 
@@ -214,9 +237,6 @@ for (i in 1:24) {
   pf <- pfilter(model, Np=1000)
   logLik(pf)
 
-  library(foreach)
-  library(doParallel)
-  registerDoParallel(cores=30)
 
   print("Starting initial pfilter")
 

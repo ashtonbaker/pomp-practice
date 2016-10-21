@@ -53,9 +53,9 @@ rproc_snippet <-
     double L_tot = 0;
     for (k = 0; k < LSTAGES; k++) L_tot += L[k];
 
-    double gamma_E = (ESTAGES / tau_E) * exp((-cel * L_tot - cea * A) / ESTAGES);
+    double gamma_E = (ESTAGES / tau_E) * exp((-cel * L_tot - cea * A)/ESTAGES);
     double gamma_L = (LSTAGES / tau_L) * (1 - mu_L);
-    double gamma_P = (PSTAGES / tau_P) * exp((-cpa * A) / ESTAGES);
+    double gamma_P = (PSTAGES / tau_P) * exp((-cpa * A) / PSTAGES);
 
     double mu_e = (ESTAGES / tau_E) - gamma_E;
     double mu_l = (LSTAGES / tau_L) - gamma_L;
@@ -65,18 +65,27 @@ rproc_snippet <-
 
     // Calculate who goes where
     for (k = 0; k < ESTAGES; k++) {
-      etrans[2*k]   = rbinom(E[k], gamma_E);                             // Eggs growing to next stage
-      etrans[2*k+1] = rbinom(E[k] - etrans[2*k] , mu_e/(1 - gamma_E) ); // Eggs dying
+      // Eggs growing to next stage
+      etrans[2*k]   = rbinom(E[k], gamma_E);
+
+      // Eggs dying
+      etrans[2*k+1] = rbinom(E[k] - etrans[2*k] , mu_e/(1 - gamma_E) );
     }
 
     for (k = 0; k < LSTAGES; k++) {
-      ltrans[2*k]   = rbinom(L[k], gamma_L);                          // Larvae growing to next stage
-      ltrans[2*k+1] = rbinom(L[k]-ltrans[2*k], mu_l/(1 - gamma_L));   // Larvae dying
+      // Larvae growing to next stage
+      ltrans[2*k]   = rbinom(L[k], gamma_L);
+
+      // Larvae dying
+      ltrans[2*k+1] = rbinom(L[k]-ltrans[2*k], mu_l/(1 - gamma_L));
     }
 
     for (k = 0; k < PSTAGES; k++) {
-      ptrans[2*k]   = rbinom(P[k], gamma_P);                           // Pupae growing to next stage
-      ptrans[2*k+1] = rbinom(P[k]-ptrans[2*k], mu_p/(1 - gamma_P) ); // Pupae dying
+      // Pupae growing to next stage
+      ptrans[2*k]   = rbinom(P[k], gamma_P);
+
+      // Pupae dying
+      ptrans[2*k+1] = rbinom(P[k]-ptrans[2*k], mu_p/(1 - gamma_P) );
     }
 
     adeath = rbinom(A, mu_A);
@@ -234,7 +243,9 @@ stew(file="./output/pf.rda",{
 print("Finished initial pfilter")
 
 (L_pf <- logmeanexp(sapply(pf,logLik),se=TRUE))
-results <- as.data.frame(as.list(c(coef(pf[[1]]),loglik=L_pf[1],loglik=L_pf[2])))
+results <- as.data.frame(as.list(c(coef(pf[[1]]),
+                                 loglik=L_pf[1],
+                                 loglik=L_pf[2])))
 write.csv(results,file="./output/model_params.csv",row.names=FALSE)
 
 print("Starting local box search")
