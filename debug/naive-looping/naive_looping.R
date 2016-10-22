@@ -243,9 +243,9 @@ for (i in 1:24) {
   stew(file=sprintf("./output/pf%d.rda", i),{
     t_pf <- system.time(
       pf <- foreach(i=1:10,.packages='pomp',
-                    .options.multicore=list(set.seed=TRUE),
                     .export=c("model")
       ) %dopar% {
+        set.seed(seed)
         pfilter(model,Np=10000)
       }
     )
@@ -265,10 +265,10 @@ for (i in 1:24) {
       mifs_local <- foreach(i=1:20,
                             .packages='pomp',
                             .combine=c,
-                            .options.multicore=list(set.seed=TRUE),
                             .export=c("model")
       ) %dopar%
       {
+        set.seed(seed)
         mif2(
           model,
           Np=2000,
@@ -293,9 +293,9 @@ for (i in 1:24) {
       results_local <- foreach(mf=mifs_local,
                                .packages='pomp',
                                .combine=rbind,
-                               .options.multicore=list(set.seed=TRUE)
       ) %dopar%
       {
+        set.seed(seed)
         evals <- replicate(10, logLik(pfilter(mf,Np=1000)))
         ll <- logmeanexp(evals,se=TRUE)
         c(coef(mf),loglik=ll[1],loglik=ll[2])
@@ -335,6 +335,7 @@ for (i in 1:24) {
                                 .export=c("mf1")
       ) %dopar%
       {
+        set.seed(seed)
         mf <- mif2(mf1,start=c(unlist(guess)),tol=1e-60)
         mf <- mif2(mf,Nmif=20)
         ll <- replicate(10,logLik(pfilter(mf,Np=1000)))

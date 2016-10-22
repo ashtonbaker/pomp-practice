@@ -1,0 +1,5 @@
+alnus slots=1 max-slots=8
+myrtus slots=0 max-slots=8
+olea slots=0 max-slots=8
+tilia slots=0 max-slots=3
+tsuga slots=0 max-slots=3
