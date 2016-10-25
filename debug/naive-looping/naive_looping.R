@@ -10,6 +10,8 @@ require(doMPI)
 cl <- startMPIcluster()
 registerDoMPI(cl)
 
+optsN <- list(123, normal.kind="Ahrens")
+
 stopifnot(packageVersion("pomp")>="1.8.8.1")
 
 read.csv("./data/data.csv") %>%
@@ -243,9 +245,9 @@ for (i in 1:24) {
   stew(file=sprintf("./output/pf%d.rda", i),{
     t_pf <- system.time(
       pf <- foreach(i=1:10,.packages='pomp',
+                    .options.RNG = optsN,
                     .export=c("model")
-      ) %dopar% {
-        set.seed(seed)
+      ) %dorng% {
         pfilter(model,Np=10000)
       }
     )
@@ -264,11 +266,11 @@ for (i in 1:24) {
     t_local_mif <- system.time({
       mifs_local <- foreach(i=1:20,
                             .packages='pomp',
+                            .options.RNG = optsN,
                             .combine=c,
                             .export=c("model")
-      ) %dopar%
+      ) %dorng%
       {
-        set.seed(seed)
         mif2(
           model,
           Np=2000,
@@ -291,11 +293,11 @@ for (i in 1:24) {
   stew(file=sprintf("./output/lik_local%d.rda", i),{
     t_local_eval <- system.time({
       results_local <- foreach(mf=mifs_local,
+                               .options.RNG = optsN,
                                .packages='pomp',
                                .combine=rbind,
-      ) %dopar%
+      ) %dorng%
       {
-        set.seed(seed)
         evals <- replicate(10, logLik(pfilter(mf,Np=1000)))
         ll <- logmeanexp(evals,se=TRUE)
         c(coef(mf),loglik=ll[1],loglik=ll[2])
@@ -330,12 +332,12 @@ for (i in 1:24) {
       mf1 <- mifs_local[[1]]
       guesses <- as.data.frame(apply(params_box,1,function(x)runif(30,x[1],x[2])))
       results_global <- foreach(guess=iter(guesses,"row"),
+                                .options.RNG = optsN,
                                 .packages='pomp',
                                 .combine=rbind,
                                 .export=c("mf1")
-      ) %dopar%
+      ) %dorng%
       {
-        set.seed(seed)
         mf <- mif2(mf1,start=c(unlist(guess)),tol=1e-60)
         mf <- mif2(mf,Nmif=20)
         ll <- replicate(10,logLik(pfilter(mf,Np=1000)))
