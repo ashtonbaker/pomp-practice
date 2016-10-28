@@ -10,7 +10,7 @@ require(doMPI)
 cl <- startMPIcluster(maxcores = 40,workdir = '~/pomp-practice/debug/naive-looping/')
 registerDoMPI(cl)
 
-getwd()
+setwd('~/pomp-practice/debug/naive-looping/')
 
 optsN <- list(123, normal.kind="Ahrens")
 
