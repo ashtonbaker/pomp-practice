@@ -24,8 +24,8 @@ dat %>%
   melt(id=c("weeks","rep")) %>%
   acast(variable~rep~weeks) -> datarray
 
-stages.E <- 7
-stages.L <- 7
+stages.E <- 1
+stages.L <- 6
 stages.P <- 7
 stages.A <- 1
 
@@ -253,7 +253,7 @@ for (i in 1:24) {
                     .options.RNG = optsN,
                     .export=c("model")
       ) %dorng% {
-        pfilter(model,Np=100000)
+        pfilter(model,Np=1000)
       }
     )
     n_pf <- getDoParWorkers()
@@ -303,7 +303,7 @@ for (i in 1:24) {
                                .combine=rbind
       ) %dorng%
       {
-        evals <- replicate(10, logLik(pfilter(mf,Np=100000)))
+        evals <- replicate(10, logLik(pfilter(mf,Np=1000)))
         ll <- logmeanexp(evals,se=TRUE)
         c(coef(mf),loglik=ll[1],loglik=ll[2])
       }
@@ -344,8 +344,8 @@ for (i in 1:24) {
       ) %dorng%
       {
         mf <- mif2(mf1,start=c(unlist(guess)),tol=1e-60)
-        mf <- mif2(mf,Nmif=100)
-        ll <- replicate(10,logLik(pfilter(mf,Np=100000)))
+        mf <- mif2(mf,Nmif=50)
+        ll <- replicate(10,logLik(pfilter(mf,Np=1000)))
         ll <- logmeanexp(ll,se=TRUE)
         c(coef(mf),loglik=ll[1],loglik=ll[2])
       }
