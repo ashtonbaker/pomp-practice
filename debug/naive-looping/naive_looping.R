@@ -233,15 +233,15 @@ for (i in 1:24) {
                od = 1
                )) -> model
 
-  model %>% simulate(as.data.frame=T,nsim=5) %>%
-    melt(id=c("time","sim")) %>%
-    subset(variable %in% c("L_obs","P_obs","A_obs")) %>%
-    ggplot(aes(x=time,y=value,color=variable,group=sim))+
-      geom_line()+
-      facet_wrap(~variable,ncol=1,scales="free_y")
+  #model %>% simulate(as.data.frame=T,nsim=5) %>%
+  #  melt(id=c("time","sim")) %>%
+  #  subset(variable %in% c("L_obs","P_obs","A_obs")) %>%
+  #  ggplot(aes(x=time,y=value,color=variable,group=sim))+
+  #    geom_line()+
+  #    facet_wrap(~variable,ncol=1,scales="free_y")
 
-  pf <- pfilter(model, Np=1000)
-  logLik(pf)
+  #pf <- pfilter(model, Np=100000)
+  #logLik(pf)
 
 
   print("Starting initial pfilter")
@@ -253,7 +253,7 @@ for (i in 1:24) {
                     .options.RNG = optsN,
                     .export=c("model")
       ) %dorng% {
-        pfilter(model,Np=10000)
+        pfilter(model,Np=100000)
       }
     )
     n_pf <- getDoParWorkers()
@@ -278,8 +278,8 @@ for (i in 1:24) {
       {
         mif2(
           model,
-          Np=2000,
-          Nmif=50,
+          Np=10000,
+          Nmif=100,
           cooling.type="geometric",
           cooling.fraction.50=0.5,
           transform=TRUE,
@@ -303,7 +303,7 @@ for (i in 1:24) {
                                .combine=rbind
       ) %dorng%
       {
-        evals <- replicate(10, logLik(pfilter(mf,Np=1000)))
+        evals <- replicate(10, logLik(pfilter(mf,Np=100000)))
         ll <- logmeanexp(evals,se=TRUE)
         c(coef(mf),loglik=ll[1],loglik=ll[2])
       }
@@ -344,8 +344,8 @@ for (i in 1:24) {
       ) %dorng%
       {
         mf <- mif2(mf1,start=c(unlist(guess)),tol=1e-60)
-        mf <- mif2(mf,Nmif=20)
-        ll <- replicate(10,logLik(pfilter(mf,Np=1000)))
+        mf <- mif2(mf,Nmif=100)
+        ll <- replicate(10,logLik(pfilter(mf,Np=100000)))
         ll <- logmeanexp(ll,se=TRUE)
         c(coef(mf),loglik=ll[1],loglik=ll[2])
       }
