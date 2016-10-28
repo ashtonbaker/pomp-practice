@@ -9,7 +9,7 @@ library(foreach)
 library(doMPI)
 library(doRNG)
 
-cl <- startMPIcluster(maxcores = 40,workdir = '~/pomp-practice/debug/naive-looping/')z
+cl <- startMPIcluster(maxcores = 40,workdir = '~/pomp-practice/debug/naive-looping/')
 registerDoMPI(cl)
 
 setwd('~/pomp-practice/debug/naive-looping/')
