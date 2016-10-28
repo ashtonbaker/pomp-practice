@@ -248,7 +248,8 @@ for (i in 1:24) {
 
   stew(file=sprintf("./output/pf%d.rda", i),{
     t_pf <- system.time(
-      pf <- foreach(i=1:10,.packages='pomp',
+      pf <- foreach(i=1:10,
+                    .packages='pomp',
                     .options.RNG = optsN,
                     .export=c("model")
       ) %dorng% {
@@ -356,7 +357,7 @@ for (i in 1:24) {
 
   print("Finished global search")
 
-  p_optim <- unlist(results_global[which.max(results_global$loglik),])
+  p_optim <- results_global[which.max(results_global$loglik),]
   print(p_optim)
   write.table(p_optim, file = "./output/optim_params.csv", append = TRUE, col.names=FALSE, row.names = FALSE, sep=", ")
 }
