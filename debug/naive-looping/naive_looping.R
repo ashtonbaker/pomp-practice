@@ -7,7 +7,7 @@ library(reshape2)
 library(foreach)
 #options(echo = FALSE)
 require(doMPI)
-cl <- startMPIcluster(cores = 40)
+cl <- startMPIcluster(maxcores = 40)
 registerDoMPI(cl)
 
 optsN <- list(123, normal.kind="Ahrens")
