@@ -7,7 +7,7 @@ library(reshape2)
 library(foreach)
 #options(echo = FALSE)
 require(doMPI)
-cl <- startMPIcluster(maxcores = 40)
+cl <- startMPIcluster(maxcores = 40,workdir = '~/pomp-practice/debug/naive-looping/')
 registerDoMPI(cl)
 
 optsN <- list(123, normal.kind="Ahrens")
