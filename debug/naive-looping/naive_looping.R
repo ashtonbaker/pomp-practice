@@ -299,7 +299,7 @@ for (i in 1:24) {
       results_local <- foreach(mf=mifs_local,
                                .options.RNG = optsN,
                                .packages='pomp',
-                               .combine=rbind,
+                               .combine=rbind
       ) %dorng%
       {
         evals <- replicate(10, logLik(pfilter(mf,Np=1000)))
