@@ -6,10 +6,10 @@ library(magrittr)
 library(reshape2)
 library(foreach)
 #options(echo = FALSE)
-require(doMPI)
+library(doMPI)
 library(doRNG)
 
-cl <- startMPIcluster(maxcores = 40,workdir = '~/pomp-practice/debug/naive-looping/')
+cl <- startMPIcluster(maxcores = 40,workdir = '~/pomp-practice/debug/naive-looping/')z
 registerDoMPI(cl)
 
 setwd('~/pomp-practice/debug/naive-looping/')
@@ -317,7 +317,7 @@ for (i in 1:24) {
   write.csv(results,file="./output/model_params.csv",row.names=FALSE)
 
   params_box <- rbind(
-    b=c(0, 20),
+    b=c(0, 2),
     cea=c(0, 1),
     cel = c(0, 1),
     cpa = c(0, 1),
@@ -344,8 +344,8 @@ for (i in 1:24) {
       ) %dorng%
       {
         mf <- mif2(mf1,start=c(unlist(guess)),tol=1e-60)
-        mf <- mif2(mf,Nmif=50)
-        ll <- replicate(10,logLik(pfilter(mf,Np=1000)))
+        mf <- mif2(mf,Nmif=100)
+        ll <- replicate(10,logLik(pfilter(mf,Np=10000)))
         ll <- logmeanexp(ll,se=TRUE)
         c(coef(mf),loglik=ll[1],loglik=ll[2])
       }
@@ -359,7 +359,7 @@ for (i in 1:24) {
 
   p_optim <- results_global[which.max(results_global$loglik),]
   print(p_optim)
-  write.table(p_optim, file = "./output/optim_params.csv", append = TRUE, col.names=FALSE, row.names = FALSE, sep=", ")
+  write.table(p_optim, file = "./output/optim_params.csv", append = TRUE, col.names=(i==1), row.names = FALSE, sep=", ")
 }
 
 closeCluster(cl)
