@@ -10,6 +10,8 @@ require(doMPI)
 cl <- startMPIcluster(maxcores = 40,workdir = '~/pomp-practice/debug/naive-looping/')
 registerDoMPI(cl)
 
+getwd()
+
 optsN <- list(123, normal.kind="Ahrens")
 
 stopifnot(packageVersion("pomp")>="1.8.8.1")
