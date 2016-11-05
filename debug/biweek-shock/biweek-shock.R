@@ -146,10 +146,15 @@ for (i in 1:24) {
 
       A -= adeath;
 
-      if ((t %% 14 == 0) && (t != 0) && %f > 0.5) {
+      if ((int(t + 0.01) %% 14 == 0) && (t != 0) && %f > 0.5) {
+        double P_tot = 0;
+        for (k = 0; k < PSTAGES; k++) P_tot += P[k];
+
         double A_pred = (1 - 0.96) * A_prev + P_prev * exp(-%f * A);
-        A = min(A, A_pred);
-        P_prev = P;
+        if (A_pred < A) {
+          A = A_pred
+        }
+        P_prev = P_tot;
         A_prev = A;
       }
       ", mu_A[i], cpa[i]))
