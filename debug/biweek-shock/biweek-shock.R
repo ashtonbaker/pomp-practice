@@ -146,11 +146,11 @@ for (i in 1:24) {
 
       A -= adeath;
 
-      if ((nearbyint(t + 0.01) %% 14 == 0) && (t != 0) && %f > 0.5) {
+      if ((round(t + 0.01) %% 14 == 0) && (t != 0) && %f > 0.5) {
         double P_tot = 0;
         for (k = 0; k < PSTAGES; k++) P_tot += P[k];
 
-        double A_pred = nearbyint((1 - 0.96) * A_prev) + nearbyint(P_prev * exp(-%f * A));
+        double A_pred = round((1 - 0.96) * A_prev) + round(P_prev * exp(-%f * A));
         if (A_pred < A) {
           A = A_pred;
         }
