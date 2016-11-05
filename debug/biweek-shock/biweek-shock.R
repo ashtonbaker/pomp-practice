@@ -9,10 +9,10 @@ library(foreach)
 library(doMPI)
 library(doRNG)
 
-cl <- startMPIcluster(maxcores = 40,workdir = '~/pomp-practice/debug/naive-looping/')
+cl <- startMPIcluster(maxcores = 40,workdir = '~/pomp-practice/debug/biweek-shock/')
 registerDoMPI(cl)
 
-setwd('~/pomp-practice/debug/naive-looping/')
+setwd('~/pomp-practice/debug/biweek-shock/')
 
 optsN <- list(123, normal.kind="Ahrens")
 
