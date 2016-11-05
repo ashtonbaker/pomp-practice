@@ -75,6 +75,8 @@ for (i in 1:24) {
       double *L = &L1;
       double *P = &P1;
 
+      int time = round(t);
+
       int k;
       double L_tot = 0;
       for (k = 0; k < LSTAGES; k++) L_tot += L[k];
@@ -146,7 +148,7 @@ for (i in 1:24) {
 
       A -= adeath;
 
-      if ((round(t + 0.01) %% 14 == 0) && (t != 0) && %f > 0.5) {
+      if ((t %% 14 == 0) && (t != 0) && %f > 0.5) {
         double P_tot = 0;
         for (k = 0; k < PSTAGES; k++) P_tot += P[k];
 
