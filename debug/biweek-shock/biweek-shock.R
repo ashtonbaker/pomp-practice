@@ -152,7 +152,7 @@ for (i in 1:24) {
 
         double A_pred = nearbyint((1 - 0.96) * A_prev) + nearbyint(P_prev * exp(-%f * A));
         if (A_pred < A) {
-          A = A_pred
+          A = A_pred;
         }
         P_prev = P_tot;
         A_prev = A;
