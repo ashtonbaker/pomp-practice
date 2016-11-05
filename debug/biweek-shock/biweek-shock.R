@@ -29,144 +29,133 @@ stages.L <- 6
 stages.P <- 7
 stages.A <- 1
 
-glob_snippet <- Csnippet(sprintf("
-                                 #include <math.h>
-                                 #define ESTAGES %d
-                                 #define LSTAGES %d
-                                 #define PSTAGES %d
-                                 #define ASTAGES %d
-                                 #define L_0 250
-                                 #define P_0 5
-                                 #define A_0 100
-                                 ", stages.E, stages.L, stages.P, stages.A))
+cpa = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+cpa[c(4, 11, 24)] = 0
+cpa[c(5, 12, 15)] = 0.00
+cpa[c(1, 7, 20)] = 0.05
+cpa[c(6, 10, 16)] = 0.10
+cpa[c(8, 17, 21)] = 0.25
+cpa[c(2, 13, 22)] = 0.35
+cpa[c(9, 14, 19)] = 0.50
+cpa[c(3, 18, 23)] = 1.00
 
-init_snippet <-
-  Csnippet("
-    double *E = &E1;
-    double *L = &L1;
-    double *P = &P1;
-    int k = 0;
-    for(k = 0; k < 7; k++) E[k] = 0;
-    for(k = 0; k < 5; k++) L[k] = 36;
-    for(k = 5; k < 7; k++) L[k] = 35;
-    for(k = 0; k < 5; k++) P[k] = 1;
-    for(k = 5; k < 7; k++) P[k] = 0;
-    A = 100;")
+mu_A = c(0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96)
+mu_A[c(4, 11, 24)] = 0.0
 
-rproc_snippet <-
-  Csnippet("
-    double *E = &E1;
-    double *L = &L1;
-    double *P = &P1;
+for (i in 1:24) {
+  glob_snippet <- Csnippet(sprintf("
+                                   #include <math.h>
+                                   #define ESTAGES %d
+                                   #define LSTAGES %d
+                                   #define PSTAGES %d
+                                   #define ASTAGES %d
+                                   #define L_0 250
+                                   #define P_0 5
+                                   #define A_0 100
+                                   ", stages.E, stages.L, stages.P, stages.A))
 
-    int k;
-    double L_tot = 0;
-    for (k = 0; k < LSTAGES; k++) L_tot += L[k];
+  init_snippet <-
+    Csnippet("
+      double *E = &E1;
+      double *L = &L1;
+      double *P = &P1;
+      int k = 0;
+      for(k = 0; k < 7; k++) E[k] = 0;
+      for(k = 0; k < 5; k++) L[k] = 36;
+      for(k = 5; k < 7; k++) L[k] = 35;
+      for(k = 0; k < 5; k++) P[k] = 1;
+      for(k = 5; k < 7; k++) P[k] = 0;
+      A = A_0;
+      A_prev = A_0;
+      P_prev = P_0;")
 
-    double gamma_E = (ESTAGES / tau_E) *
-                     exp((-cel * L_tot - cea * A) / ESTAGES);
-    double gamma_L = (LSTAGES / tau_L) * (1 - mu_L);
-    double gamma_P = (PSTAGES / tau_P) * exp((-cpa * A) / PSTAGES);
+  rproc_snippet <-
+    Csnippet(sprintf("
+      double *E = &E1;
+      double *L = &L1;
+      double *P = &P1;
 
-    double mu_e = (ESTAGES / tau_E) - gamma_E;
-    double mu_l = (LSTAGES / tau_L) - gamma_L;
-    double mu_p = (PSTAGES / tau_P) - gamma_P;
+      int k;
+      double L_tot = 0;
+      for (k = 0; k < LSTAGES; k++) L_tot += L[k];
 
-    double etrans[2*ESTAGES], ltrans[2*LSTAGES], ptrans[2*PSTAGES], adeath;
+      double gamma_E = (ESTAGES / tau_E) *
+                       exp((-cel * L_tot - cea * A) / ESTAGES);
+      double gamma_L = (LSTAGES / tau_L) * (1 - mu_L);
+      double gamma_P = (PSTAGES / tau_P) * exp((-cpa * A) / PSTAGES);
 
-    // Calculate who goes where
-    for (k = 0; k < ESTAGES; k++) {
-      // Eggs growing to next stage
-      etrans[2*k]   = rbinom(E[k], gamma_E);
+      double mu_e = (ESTAGES / tau_E) - gamma_E;
+      double mu_l = (LSTAGES / tau_L) - gamma_L;
+      double mu_p = (PSTAGES / tau_P) - gamma_P;
 
-      // Eggs dying
-      etrans[2*k+1] = rbinom(E[k]-etrans[2*k], mu_e/(1 - gamma_E) );
-    }
+      double etrans[2*ESTAGES], ltrans[2*LSTAGES], ptrans[2*PSTAGES], adeath;
 
-    for (k = 0; k < LSTAGES; k++) {
-      // Larvae growing to next stage
-      ltrans[2*k]   = rbinom(L[k], gamma_L);
+      // Calculate who goes where
+      for (k = 0; k < ESTAGES; k++) {
+        // Eggs growing to next stage
+        etrans[2*k]   = rbinom(E[k], gamma_E);
 
-      // Larvae dying
-      ltrans[2*k+1] = rbinom(L[k]-ltrans[2*k], mu_l/(1 - gamma_L));
-    }
+        // Eggs dying
+        etrans[2*k+1] = rbinom(E[k]-etrans[2*k], mu_e/(1 - gamma_E) );
+      }
 
-    for (k = 0; k < PSTAGES; k++) {
-      // Pupae growing to next stage
-      ptrans[2*k]   = rbinom(P[k], gamma_P);
+      for (k = 0; k < LSTAGES; k++) {
+        // Larvae growing to next stage
+        ltrans[2*k]   = rbinom(L[k], gamma_L);
 
-      // Pupae dying
-      ptrans[2*k+1] = rbinom(P[k]-ptrans[2*k], mu_p/(1 - gamma_P) );
-    }
+        // Larvae dying
+        ltrans[2*k+1] = rbinom(L[k]-ltrans[2*k], mu_l/(1 - gamma_L));
+      }
 
-    adeath = rbinom(A, mu_A);
+      for (k = 0; k < PSTAGES; k++) {
+        // Pupae growing to next stage
+        ptrans[2*k]   = rbinom(P[k], gamma_P);
 
-    // Bookkeeping
-    E[0] += rpois(b*A); // oviposition
+        // Pupae dying
+        ptrans[2*k+1] = rbinom(P[k]-ptrans[2*k], mu_p/(1 - gamma_P) );
+      }
 
-    for (k = 0; k < ESTAGES; k++) {
-      // Subtract eggs that die or progress
-      E[k] -= (etrans[2*k]+etrans[2*k+1]);
+      adeath = rbinom(A, mu_A);
 
-      // Add eggs that arrive from previous E stage.
-      E[k+1] += etrans[2*k]; // E[ESTAGES] == L[0]!!
-    }
+      // Bookkeeping
+      E[0] += rpois(b*A); // oviposition
 
-    for (k = 0; k < LSTAGES; k++) {
-      // Subtract larvae that die or progress
-      L[k] -= (ltrans[2*k]+ltrans[2*k+1]);
+      for (k = 0; k < ESTAGES; k++) {
+        // Subtract eggs that die or progress
+        E[k] -= (etrans[2*k]+etrans[2*k+1]);
 
-      // Add larvae that arrive from previous E stage.
-      L[k+1] += ltrans[2*k]; // L[LSTAGES] == P[0]!!
-    }
+        // Add eggs that arrive from previous E stage.
+        E[k+1] += etrans[2*k]; // E[ESTAGES] == L[0]!!
+      }
 
-    for (k = 0; k < PSTAGES; k++) {
-      // Subtract pupae that die or progress
-      P[k] -= (ptrans[2*k]+ptrans[2*k+1]);
+      for (k = 0; k < LSTAGES; k++) {
+        // Subtract larvae that die or progress
+        L[k] -= (ltrans[2*k]+ltrans[2*k+1]);
 
-      // Add pupae that arrive from previous E stage.
-      P[k+1] += ptrans[2*k]; // P[PSTAGES] == A[0]!!
-    }
+        // Add larvae that arrive from previous E stage.
+        L[k+1] += ltrans[2*k]; // L[LSTAGES] == P[0]!!
+      }
 
-    A -= adeath;
+      for (k = 0; k < PSTAGES; k++) {
+        // Subtract pupae that die or progress
+        P[k] -= (ptrans[2*k]+ptrans[2*k+1]);
 
-    if ((time % 14) == 0) && time != 0) {
-      adeath =
-    }
-    ")
+        // Add pupae that arrive from previous E stage.
+        P[k+1] += ptrans[2*k]; // P[PSTAGES] == A[0]!!
+      }
 
-dmeas_snippet <-Csnippet(
-  "
-  const double *L = &L1;
-  const double *P = &P1;
-  double fudge = 1e-9;
+      A -= adeath;
 
-  int k;
-  double L_tot = 0;
-  double P_tot = 0;
-  for (k = 0; k < LSTAGES; k++) L_tot += L[k];
-  for (k = 0; k < PSTAGES; k++) P_tot += P[k];
+      if ((t % 14 == 0) && (t != 0) && %f > 0.5) {
+        double A_pred = (1 - 0.96) * A_prev + P_prev * exp(-%f * A);
+        A = min(A, A_pred);
+        P_prev = P;
+        A_prev = A;
+      }
+      ", mu_A[i], cpa[i]))
 
-  lik = dnbinom_mu(L_obs, 1/od, L_tot+fudge, 1) +
-        dnbinom_mu(P_obs, 1/od, P_tot+fudge, 1) +
-        dnbinom_mu(A_obs, 1/od, A+fudge,     1);
-
-//  if(lik < -138){
-//    Rprintf(\"\\n\\nweeks %f\", t);
-//    Rprintf(\"\\nL_tot %f\", L_tot);
-//    Rprintf(\"\\nP_tot %f\", P_tot);
-//    Rprintf(\"\\nA_tot %f\", A);
-//    Rprintf(\"\\nL_obs %f\", L_obs);
-//    Rprintf(\"\\nP_obs %f\", P_obs);
-//    Rprintf(\"\\nA_obs %f\", A_obs);
-//    Rprintf(\"\\nloglik %f\",lik);
-//  }
-
-  lik = (give_log) ? lik : exp(lik);
-   ")
-
-rmeas_snippet <-
-  Csnippet("
+  dmeas_snippet <- Csnippet(
+    "
     const double *L = &L1;
     const double *P = &P1;
     double fudge = 1e-9;
@@ -177,43 +166,75 @@ rmeas_snippet <-
     for (k = 0; k < LSTAGES; k++) L_tot += L[k];
     for (k = 0; k < PSTAGES; k++) P_tot += P[k];
 
-    L_obs = rnbinom_mu(1/od,L_tot+fudge);
-    P_obs = rnbinom_mu(1/od,P_tot+fudge);
-    A_obs = rnbinom_mu(1/od,A+fudge);")
+    lik = dnbinom_mu(L_obs, 1/od, L_tot+fudge, 1) +
+          dnbinom_mu(P_obs, 1/od, P_tot+fudge, 1) +
+          dnbinom_mu(A_obs, 1/od, A+fudge,     1);
 
-from_est <-
-  Csnippet("
-    Tb = exp(b);
-    Tcea = expit(cea);
-    Tcel = expit(cel);
-    Tcpa = expit(cpa);
-    Tmu_A = expit(mu_A);
-    Tmu_L = expit(mu_L);
-    Ttau_E = ESTAGES+exp(tau_E);
-    Ttau_L = LSTAGES+exp(tau_L);
-    Ttau_P = PSTAGES+exp(tau_P);
-    Tod = exp(od);")
+  //  if(lik < -138){
+  //    Rprintf(\"\\n\\nweeks %f\", t);
+  //    Rprintf(\"\\nL_tot %f\", L_tot);
+  //    Rprintf(\"\\nP_tot %f\", P_tot);
+  //    Rprintf(\"\\nA_tot %f\", A);
+  //    Rprintf(\"\\nL_obs %f\", L_obs);
+  //    Rprintf(\"\\nP_obs %f\", P_obs);
+  //    Rprintf(\"\\nA_obs %f\", A_obs);
+  //    Rprintf(\"\\nloglik %f\",lik);
+  //  }
 
-to_est <-
-  Csnippet("
-    Tb = log(b);
-    Tcea = logit(cea);
-    Tcel = logit(cel);
-    Tcpa = logit(cpa);
-    Tmu_A = logit(mu_A);
-    Tmu_L = logit(mu_L);
-    Ttau_E = log(tau_E-ESTAGES);
-    Ttau_L = log(tau_L-LSTAGES);
-    Ttau_P = log(tau_P-PSTAGES);
-    Tod = log(od);")
+    lik = (give_log) ? lik : exp(lik);
+     ")
 
-for (i in 1:24) {
+  rmeas_snippet <-
+    Csnippet("
+      const double *L = &L1;
+      const double *P = &P1;
+      double fudge = 1e-9;
+
+      int k;
+      double L_tot = 0;
+      double P_tot = 0;
+      for (k = 0; k < LSTAGES; k++) L_tot += L[k];
+      for (k = 0; k < PSTAGES; k++) P_tot += P[k];
+
+      L_obs = rnbinom_mu(1/od,L_tot+fudge);
+      P_obs = rnbinom_mu(1/od,P_tot+fudge);
+      A_obs = rnbinom_mu(1/od,A+fudge);")
+
+  from_est <-
+    Csnippet("
+      Tb = exp(b);
+      Tcea = expit(cea);
+      Tcel = expit(cel);
+      Tcpa = expit(cpa);
+      Tmu_A = expit(mu_A);
+      Tmu_L = expit(mu_L);
+      Ttau_E = ESTAGES+exp(tau_E);
+      Ttau_L = LSTAGES+exp(tau_L);
+      Ttau_P = PSTAGES+exp(tau_P);
+      Tod = exp(od);")
+
+  to_est <-
+    Csnippet("
+      Tb = log(b);
+      Tcea = logit(cea);
+      Tcel = logit(cel);
+      Tcpa = logit(cpa);
+      Tmu_A = logit(mu_A);
+      Tmu_L = logit(mu_L);
+      Ttau_E = log(tau_E-ESTAGES);
+      Ttau_L = log(tau_L-LSTAGES);
+      Ttau_P = log(tau_P-PSTAGES);
+      Tod = log(od);")
+
   pomp(
     data = subset(dat, rep==i, select=-rep),
     times="weeks", t0=0,
     statenames = c(sprintf("E%d",1:stages.E),
                    sprintf("L%d",1:stages.L),
-                   sprintf("P%d",1:stages.P),"A"),
+                   sprintf("P%d",1:stages.P),
+                   "A",
+                   "A_prev",
+                   "P_prev"),
     paramnames = c("b", "cea", "cel", "cpa", "mu_A", "mu_L",
                    "tau_E", "tau_L", "tau_P","od"),
     globals = glob_snippet,
