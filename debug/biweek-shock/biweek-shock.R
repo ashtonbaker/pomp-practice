@@ -146,7 +146,7 @@ for (i in 1:24) {
 
       A -= adeath;
 
-      if ((t % 14 == 0) && (t != 0) && %f > 0.5) {
+      if ((t %% 14 == 0) && (t != 0) && %f > 0.5) {
         double A_pred = (1 - 0.96) * A_prev + P_prev * exp(-%f * A);
         A = min(A, A_pred);
         P_prev = P;
