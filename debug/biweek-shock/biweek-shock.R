@@ -9,7 +9,8 @@ library(foreach)
 library(doMPI)
 library(doRNG)
 
-cl <- startMPIcluster(maxcores = 40,workdir = '~/pomp-practice/debug/biweek-shock/')
+#cl <- startMPIcluster(maxcores = 40, workdir = '~/pomp-practice/debug/biweek-shock/')
+cl <- startMPIcluster(workdir = '~/pomp-practice/debug/biweek-shock/')
 registerDoMPI(cl)
 
 setwd('~/pomp-practice/debug/biweek-shock/')
