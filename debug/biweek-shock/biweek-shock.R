@@ -311,8 +311,8 @@ for (i in 1:24) {
       {
         mif2(
           model,
-          Np=1000,
-          Nmif=20,
+          Np=10000,
+          Nmif=100,
           cooling.type="geometric",
           cooling.fraction.50=0.5,
           transform=TRUE,
