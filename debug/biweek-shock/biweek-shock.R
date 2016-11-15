@@ -155,7 +155,7 @@ for (i in 1:24) {
 
         double A_pred = round((1 - 0.96) * A_prev) + round(P_prev * exp(-%f * A));
         if (A_pred < A) {
-          double A_sub = min(A - A_pred, A_prev);
+          double A_sub = fmin(A - A_pred, A_prev);
           A -= A_sub;
         }
         P_prev = P_tot;
