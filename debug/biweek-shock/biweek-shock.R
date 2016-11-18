@@ -25,9 +25,9 @@ dat %>%
   melt(id=c("weeks","rep")) %>%
   acast(variable~rep~weeks) -> datarray
 
-stages.E <- 1
-stages.L <- 6
-stages.P <- 7
+stages.E <- 3
+stages.L <- 3
+stages.P <- 3
 stages.A <- 1
 
 cpa = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
@@ -312,8 +312,8 @@ for (i in 1:24) {
       {
         mif2(
           model,
-          Np=10000,
-          Nmif=100,
+          Np=1000,
+          Nmif=20,
           cooling.type="geometric",
           cooling.fraction.50=0.5,
           transform=TRUE,
@@ -378,8 +378,8 @@ for (i in 1:24) {
       ) %dorng%
       {
         mf <- mif2(mf1,start=c(unlist(guess)),tol=1e-60)
-        mf <- mif2(mf,Nmif=100)
-        ll <- replicate(10,logLik(pfilter(mf,Np=10000)))
+        mf <- mif2(mf,Nmif=30)
+        ll <- replicate(10,logLik(pfilter(mf,Np=1000)))
         ll <- logmeanexp(ll,se=TRUE)
         c(coef(mf),loglik=ll[1],loglik=ll[2])
       }
