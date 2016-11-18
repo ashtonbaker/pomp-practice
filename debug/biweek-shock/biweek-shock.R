@@ -31,7 +31,7 @@ stages.P <- 7
 stages.A <- 1
 
 cpa = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-cpa[c(4, 11, 24)] = 0
+cpa[c(4, 11, 24)] = 100
 cpa[c(5, 12, 15)] = 0.00
 cpa[c(1, 7, 20)] = 0.05
 cpa[c(6, 10, 16)] = 0.10
@@ -149,14 +149,14 @@ for (i in 1:24) {
 
       A -= adeath;
 
-      if ((time %% 14 == 0) && (time != 0) && %f > 0.5) {
+      if ((time %% 14 == 0) && (time != 0) && (%f < 50)) {
         double P_tot = 0;
         for (k = 0; k < PSTAGES; k++) P_tot += P[k];
 
         double A_pred = round((1 - 0.96) * A_prev) + round(P_prev * exp(-%f * A));
         if (A_pred < A) {
           double A_sub = fmin(A - A_pred, A_prev);
-          A -= A_sub;
+          A = fmin(A - A_sub, 0);
         }
         P_prev = P_tot;
         A_prev = A;
@@ -175,9 +175,9 @@ for (i in 1:24) {
     for (k = 0; k < LSTAGES; k++) L_tot += L[k];
     for (k = 0; k < PSTAGES; k++) P_tot += P[k];
 
-    lik = dnbinom_mu(L_obs, 1/od, L_tot+fudge, 1) +
-          dnbinom_mu(P_obs, 1/od, P_tot+fudge, 1) +
-          dnbinom_mu(A_obs, 1/od, A+fudge,     1);
+    lik = dnbinom_mu(L_obs, 1/od, L_tot + fudge, 1) +
+          dnbinom_mu(P_obs, 1/od, P_tot + fudge, 1) +
+          dnbinom_mu(A_obs, 1/od, A + fudge,     1);
 
   //  if(lik < -138){
   //    Rprintf(\"\\n\\nweeks %f\", t);
@@ -205,9 +205,9 @@ for (i in 1:24) {
       for (k = 0; k < LSTAGES; k++) L_tot += L[k];
       for (k = 0; k < PSTAGES; k++) P_tot += P[k];
 
-      L_obs = rnbinom_mu(1/od,L_tot+fudge);
-      P_obs = rnbinom_mu(1/od,P_tot+fudge);
-      A_obs = rnbinom_mu(1/od,A+fudge);")
+      L_obs = rnbinom_mu(1/od, L_tot + fudge);
+      P_obs = rnbinom_mu(1/od, P_tot + fudge);
+      A_obs = rnbinom_mu(1/od, A + fudge);")
 
   from_est <-
     Csnippet("
