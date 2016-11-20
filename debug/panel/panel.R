@@ -8,6 +8,7 @@ library(foreach)
 #options(echo = FALSE)
 library(doMPI)
 library(doRNG)
+library(panelPomp)
 
 #cl <- startMPIcluster(maxcores = 40, workdir = '~/pomp-practice/debug/biweek-shock/')
 cl <- startMPIcluster(workdir = '~/pomp-practice/debug/biweek-shock/')
