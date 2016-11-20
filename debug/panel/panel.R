@@ -11,10 +11,10 @@ library(doRNG)
 library(panelPomp)
 
 #cl <- startMPIcluster(maxcores = 40, workdir = '~/pomp-practice/debug/biweek-shock/')
-cl <- startMPIcluster(workdir = '~/pomp-practice/debug/biweek-shock/')
+cl <- startMPIcluster(workdir = '/userdata/ashtonsb/pomp-practice/debug/biweek-shock/')
 registerDoMPI(cl)
 
-setwd('~/pomp-practice/debug/biweek-shock/')
+setwd('/userdata/ashtonsb/pomp-practice/debug/biweek-shock/')
 
 optsN <- list(123, normal.kind="Ahrens")
 
