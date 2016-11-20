@@ -306,7 +306,7 @@ init_snippet <- Csnippet("
     rmeasure = rmeas_snippet,
     toEstimationScale = to_est,
     fromEstimationScale = from_est,
-    params = colSum(p_est))
+    params = colMeans(p_est))
 }
 
 panelPomp(
