@@ -43,7 +43,7 @@ cpa[c(9, 14, 19)] = 0.50
 cpa[c(3, 18, 23)] = 1.00
 
 mu_A = c(0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96)
-mu_A[c(4, 11, 24)] = 0.0
+mu_A[c(4, 11, 24)] = 100
 
 U <- 24
 pompList <- setNames(object = vector(mode = "list", length = U),
@@ -286,24 +286,27 @@ init_snippet <- Csnippet("
 # CONSTRUCTION OF PANEL POMP OBJECT ############################################
 
   pompList[[i.u]] <-
-    pomp(
-      data = subset(dat, rep==i.u, select=-rep),
-      times="weeks", t0=0,
-      statenames = c(sprintf("E%d",1:stages.E),
-                     sprintf("L%d",1:stages.L),
-                     sprintf("P%d",1:stages.P),"A"),
-      paramnames = c("b", "cea", "cel", "cpa", "mu_A", "mu_L",
-                     "tau_E", "tau_L", "tau_P","od"),
-      globals = glob_snippet,
-      initializer = init_snippet,
-      rprocess = discrete.time.sim(
-        step.fun = rproc_snippet,
-        delta.t = 1/7),
-      dmeasure = dmeas_snippet,
-      rmeasure = rmeas_snippet,
-      toEstimationScale = to_est,
-      fromEstimationScale = from_est,
-      params = colMeans(p_est))
+  pomp(
+    data = subset(dat, rep==[[i.u]], select=-rep),
+    times="weeks", t0=0,
+    statenames = c(sprintf("E%d",1:stages.E),
+                   sprintf("L%d",1:stages.L),
+                   sprintf("P%d",1:stages.P),
+                   "A",
+                   "A_prev",
+                   "P_prev"),
+    paramnames = c("b", "cea", "cel", "cpa", "mu_A", "mu_L",
+                   "tau_E", "tau_L", "tau_P","od"),
+    globals = glob_snippet,
+    initializer = init_snippet,
+    rprocess = discrete.time.sim(
+      step.fun = rproc_snippet,
+      delta.t = 1/7),
+    dmeasure = dmeas_snippet,
+    rmeasure = rmeas_snippet,
+    toEstimationScale = to_est,
+    fromEstimationScale = from_est,
+    params = colSum(p_est))
 }
 
 panelPomp(
@@ -327,9 +330,9 @@ stew(file=sprintf("./output/pf%d.rda", i),{
     pf <- foreach(i=1:10,
                   .packages='pomp',
                   .options.RNG = optsN,
-                  .export=c("model")
+                  .export=c("panelModel")
     ) %dorng% {
-      pfilter(model,Np=1000)
+      pfilter(panelModel,Np=1000)
     }
   )
   n_pf <- getDoParWorkers()
@@ -349,11 +352,11 @@ stew(file=sprintf("./output/box_search_local%i.rda", i),{
                           .packages='pomp',
                           .options.RNG = optsN,
                           .combine=c,
-                          .export=c("model")
+                          .export=c("panelModel")
     ) %dorng%
     {
       mif2(
-        model,
+        panelModel,
         Np=1000,
         Nmif=20,
         cooling.type="geometric",
