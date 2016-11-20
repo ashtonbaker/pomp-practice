@@ -314,7 +314,7 @@ panelPomp(
   object = pompList,
   shared = colMeans(p_est) -> shared.params,
   specific = matrix(
-    data = c() -> specific.params,
+    data = colMeans(p_est)[c()] -> specific.params,
     nrow = length(specific.params),
     ncol = U,
     dimnames = list(names(specific.params),
