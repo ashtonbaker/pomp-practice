@@ -287,7 +287,7 @@ init_snippet <- Csnippet("
 
   pompList[[i.u]] <-
   pomp(
-    data = subset(dat, rep==[[i.u]], select=-rep),
+    data = subset(dat, rep==i.u, select=-rep),
     times="weeks", t0=0,
     statenames = c(sprintf("E%d",1:stages.E),
                    sprintf("L%d",1:stages.L),
