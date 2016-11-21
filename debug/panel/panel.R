@@ -11,8 +11,8 @@ library(doRNG)
 library(panelPomp)
 
 #cl <- startMPIcluster(maxcores = 40, workdir = '~/pomp-practice/debug/biweek-shock/')
-#cl <- startMPIcluster(workdir = '/userdata/ashtonsb/pomp-practice/debug/panel/')
-#registerDoMPI(cl)
+cl <- startMPIcluster(workdir = '/userdata/ashtonsb/pomp-practice/debug/panel/')
+registerDoMPI(cl)
 
 setwd('/userdata/ashtonsb/pomp-practice/debug/panel/')
 
@@ -335,7 +335,7 @@ registerDoParallel(cores=30)
 
 print("Starting initial pfilter")
 
-stew(file=sprintf("./output/pf%d.rda", i),{
+stew(file="./output/pf%d.rda",{
   t_pf <- system.time(
     pf <- foreach(i=1:10,
                   .packages='pomp',
@@ -356,7 +356,7 @@ write.csv(results,file="./output/model_params.csv",row.names=FALSE)
 
 print("Starting local box search")
 
-stew(file=sprintf("./output/box_search_local%i.rda", i),{
+stew(file="./output/box_search_local%i.rda",{
   t_local_mif <- system.time({
     mifs_local <- foreach(i=1:20,
                           .packages='pomp',
@@ -384,7 +384,7 @@ print("Finished local box search")
 
 print("Starting lik_local")
 
-stew(file=sprintf("./output/lik_local%d.rda", i),{
+stew(file="./output/lik_local.rda",{
   t_local_eval <- system.time({
     results_local <- foreach(mf=mifs_local,
                              .options.RNG = optsN,
@@ -420,7 +420,7 @@ params_box <- rbind(
 
 print("Starting global search")
 
-stew(file=sprintf("./output/box_search_global%d.rda", i),{
+stew(file="./output/box_search_global",{
   n_global <- getDoParWorkers()
   t_global <- system.time({
     mf1 <- mifs_local[[1]]
