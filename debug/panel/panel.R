@@ -11,10 +11,10 @@ library(doRNG)
 library(panelPomp)
 
 #cl <- startMPIcluster(maxcores = 40, workdir = '~/pomp-practice/debug/biweek-shock/')
-cl <- startMPIcluster(workdir = '/userdata/ashtonsb/pomp-practice/debug/biweek-shock/')
-registerDoMPI(cl)
+#cl <- startMPIcluster(workdir = '/userdata/ashtonsb/pomp-practice/debug/panel/')
+#registerDoMPI(cl)
 
-setwd('/userdata/ashtonsb/pomp-practice/debug/biweek-shock/')
+setwd('/userdata/ashtonsb/pomp-practice/debug/panel/')
 
 optsN <- list(123, normal.kind="Ahrens")
 
@@ -28,6 +28,7 @@ dat %>%
 
 read.csv("./data/optim_params.csv") -> p_est
 p_est[c("b", "cea", "cel", "cpa", "mu_A", "mu_L","tau_E", "tau_L", "tau_P","od")] -> p_est
+p_mean = colMeans(p_est)
 
 stages.E <- 7
 stages.L <- 7
@@ -308,14 +309,14 @@ init_snippet <- Csnippet("
     rmeasure = rmeas_snippet,
     toEstimationScale = to_est,
     fromEstimationScale = from_est,
-    params = colMeans(p_est))
+    params = p_mean)
 }
 
 panelPomp(
   object = pompList,
-  shared = colMeans(p_est) -> shared.params,
+  shared = p_mean -> shared.params,
   specific = matrix(
-    data = colMeans(p_est)[c()] -> specific.params,
+    data = p_mean[c()] -> specific.params,
     nrow = length(specific.params),
     ncol = U,
     dimnames = list(names(specific.params),
