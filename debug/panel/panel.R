@@ -27,6 +27,7 @@ dat %>%
   acast(variable~rep~weeks) -> datarray
 
 read.csv("./data/optim_params.csv") -> p_est
+p_est[c("b", "cea", "cel", "cpa", "mu_A", "mu_L","tau_E", "tau_L", "tau_P","od")] -> p_est
 
 stages.E <- 7
 stages.L <- 7
