@@ -329,13 +329,9 @@ panelPomp(
 pf <- pfilter(panelModel, Np=1000)
 logLik(pf)
 
-library(foreach)
-library(doParallel)
-registerDoParallel(cores=30)
-
 print("Starting initial pfilter")
 
-stew(file="./output/pf%d.rda",{
+stew(file="./output/pf.rda",{
   t_pf <- system.time(
     pf <- foreach(i=1:10,
                   .packages='pomp',
@@ -356,7 +352,7 @@ write.csv(results,file="./output/model_params.csv",row.names=FALSE)
 
 print("Starting local box search")
 
-stew(file="./output/box_search_local%i.rda",{
+stew(file="./output/box_search_local.rda",{
   t_local_mif <- system.time({
     mifs_local <- foreach(i=1:20,
                           .packages='pomp',
