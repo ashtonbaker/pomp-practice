@@ -346,9 +346,9 @@ stew(file="./output/pf.rda",{
 
 print("Finished initial pfilter")
 
-(L_pf <- logmeanexp(sapply(pf,logLik),se=TRUE))
-results <- as.data.frame(as.list(c(coef(pf[[1]]),loglik=L_pf[1],loglik=L_pf[2])))
-write.csv(results,file="./output/model_params.csv",row.names=FALSE)
+#(L_pf <- logmeanexp(sapply(pf,logLik),se=TRUE))
+#results <- #as.data.frame(as.list(c(coef(pf[[1]]),loglik=L_pf[1],loglik=L_pf[2])))
+#write.csv(results,file="./output/model_params.csv",row.names=FALSE)
 
 print("Starting local box search")
 
@@ -397,9 +397,9 @@ stew(file="./output/lik_local.rda",{
 
 print("Finished lik_local")
 
-results_local <- as.data.frame(results_local)
-results <- rbind(results,results_local[names(results)])
-write.csv(results,file="./output/model_params.csv",row.names=FALSE)
+#results_local <- as.data.frame(results_local)
+#results <- rbind(results,results_local[names(results)])
+#write.csv(results,file="./output/model_params.csv",row.names=FALSE)
 
 params_box <- rbind(
   b = range(p_est$b),
