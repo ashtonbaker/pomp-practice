@@ -445,6 +445,8 @@ print("Finished global search")
 p_optim <- results_global[which.max(results_global$loglik),]
 print(p_optim)
 
+print(results_global)
+
 write.table(results_global, file = "./output/optim_params.csv", append = TRUE, col.names=TRUE, row.names = FALSE, sep=", ")
 
 
