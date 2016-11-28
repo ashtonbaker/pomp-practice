@@ -437,7 +437,7 @@ stew(file="./output/box_search_global",{
   })
 },seed=1270401374,kind="L'Ecuyer")
 results_global <- as.data.frame(results_global)
-results <- rbind(results,results_global[names(results)])
+#results <- rbind(results,results_global[names(results)])
 #write.csv(results,file="./output/model_params.csv",row.names=FALSE)
 
 print("Finished global search")
