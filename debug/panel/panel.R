@@ -444,7 +444,7 @@ print("Finished global search")
 
 p_optim <- results_global[which.max(results_global$loglik),]
 print(p_optim)
-write.table(p_optim, file = "./output/optim_params.csv", append = TRUE, col.names=(i==1), row.names = FALSE, sep=", ")
+write.table(p_optim, file = "./output/optim_params.csv", append = TRUE, col.names=(u.i==1), row.names = FALSE, sep=", ")
 }
 
 closeCluster(cl)
